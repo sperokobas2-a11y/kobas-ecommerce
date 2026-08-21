@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  slug        String    @unique
+  description String
+  price       Float
+  comparePrice Float?
+  stock       Int       @default(0)
+  sku         String?   @unique
+  images      String[]
+  featured    Boolean   @default(false)
+  active      Boolean   @default(true)
+
+  categoryId  String    @db.ObjectId
+  category    Category  @relation(fields: [categoryId], references: [id])
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+model Customer {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  firstName String
+  lastName  String
+  email     String   @unique
+  password  String?
+  whatsapp  String
+  address   String?
+  city      String?
+  country   String   @default("Bénin")
+
+  orders    Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([whatsapp])
+}
+
+
+
+model Order {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  orderNumber   String      @unique
+
+  customerId    String      @db.ObjectId
+  customer      Customer    @relation(fields: [customerId], references: [id])
+
+  items         OrderItem[]
+  payments      Payment[]
+
+  subtotal      Float
+  shipping      Float       @default(0)
+  total         Float
+
+  status        OrderStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+  paymentMethod PaymentMethod?
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  orderId   String   @db.ObjectId
+  order     Order    @relation(fields: [orderId], references: [id])
+
+  productId String   @db.ObjectId
+  name      String
+  price     Float
+  quantity  Int
+  total     Float
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+}
+model Payment {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+
+  transactionId   String        @unique
+  orderId         String        @db.ObjectId
+  order           Order         @relation(fields: [orderId], references: [id])
+
+  amount          Float
+  currency        String        @default("XOF")
+
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+
+  phone           String?
+  provider        String?
+  providerRef     String?
+
+  metadata        Json?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+  @@index([createdAt])
+}
+model ContactMessage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  read      Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([read])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  MTN_MONEY
+  MOOV_MONEY
+  CARD
+  CASH
+}
+
