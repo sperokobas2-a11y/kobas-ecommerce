@@ -1,4 +1,3 @@
-```tsx
 import Image from "next/image";
 import Header from "@/components/Header";
 import Link from "next/link";
@@ -95,7 +94,6 @@ export default async function Home() {
                 className="group inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-black transition hover:bg-zinc-200"
               >
                 Explorer la boutique
-
                 <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
               </Link>
 
@@ -309,7 +307,7 @@ export default async function Home() {
 
                       <button
                         type="button"
-                        aria-label={`Ajouter ${product.name} au panier`}
+                        aria-label={"Ajouter " + product.name + " au panier"}
                         className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-black transition hover:bg-blue-400"
                       >
                         <ShoppingCart className="h-4 w-4" />
@@ -386,4 +384,3 @@ export default async function Home() {
     </main>
   );
 }
-```
