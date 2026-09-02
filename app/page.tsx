@@ -257,20 +257,28 @@ export default async function Home() {
                   className="group overflow-hidden rounded-2xl border border-white/8 bg-white/[0.025] transition duration-300 hover:-translate-y-1 hover:border-white/15"
                 >
                   <Link href={`/produit/${product.slug}`}>
-                    <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-900 to-blue-950/40">
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-blue-400 backdrop-blur-xl transition duration-500 group-hover:scale-110">
-                          <Zap className="h-9 w-9" />
-                        </div>
-                      </div>
+  <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-900 to-blue-950/40">
+    {product.images?.[0] ? (
+      <img
+        src={product.images[0]}
+        alt={product.name}
+        className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+      />
+    ) : (
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-blue-400 backdrop-blur-xl transition duration-500 group-hover:scale-110">
+          <Zap className="h-9 w-9" />
+        </div>
+      </div>
+    )}
 
-                      {product.featured && (
-                        <span className="absolute left-4 top-4 rounded-full border border-blue-400/20 bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold tracking-wider text-blue-300">
-                          POPULAIRE
-                        </span>
-                      )}
-                    </div>
-                  </Link>
+    {product.featured && (
+      <span className="absolute left-4 top-4 rounded-full border border-blue-400/20 bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold tracking-wider text-blue-300">
+        POPULAIRE
+      </span>
+    )}
+  </div>
+</Link>
 
                   <div className="p-5">
                     <p className="text-xs font-medium text-blue-400">
