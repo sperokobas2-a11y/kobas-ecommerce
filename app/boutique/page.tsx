@@ -10,6 +10,7 @@ import {
 
 import { prisma } from "@/lib/prisma";
 import Header from "@/components/Header";
+export const dynamic = "force-dynamic";
 
 type BoutiquePageProps = {
   searchParams: Promise<{ categorie?: string }>;
