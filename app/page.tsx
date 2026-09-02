@@ -122,41 +122,41 @@ export default async function Home() {
             </div>
           </div>
 
-          {/* HERO VISUAL */}
-          <div className="relative hidden lg:block">
-            <div className="relative mx-auto aspect-square max-w-130">
-              <div className="absolute inset-10 rounded-[40px] bg-gradient-to-br from-blue-500/20 to-violet-600/20 blur-2xl" />
+        {/* HERO VISUAL */}
+<div className="relative hidden lg:block">
+  <div className="relative mx-auto aspect-square max-w-[520px]">
+    <div className="absolute inset-10 rounded-[40px] bg-gradient-to-br from-blue-500/20 to-violet-600/20 blur-2xl" />
 
-              <div className="absolute inset-12 flex items-center justify-center rounded-[40px] border border-white/10 bg-gradient-to-br from-white/10 to-white/2 shadow-2xl backdrop-blur-xl">
-                <div className="flex flex-col items-center text-center">
-  <div className="relative flex h-64 w-full items-center justify-center">
-    <Image
-      src="/logo.png"
-      alt="Kobas Tech"
-      width={420}
-      height={220}
-      className="h-auto max-h-56 w-auto max-w-[90%] object-contain drop-shadow-2xl"
-      priority
-    />
-  </div>
-
-  <div className="mx-auto mt-4 h-px w-32 bg-gradient-to-r from-transparent via-blue-400 to-transparent" />
-
-  <p className="mt-5 text-sm text-zinc-500">
-    Technology. Simplicity. Trust.
-  </p>
-</div>
-
-              <div className="absolute left-0 top-20 rounded-2xl border border-white/10 bg-zinc-900/80 p-4 shadow-xl backdrop-blur-xl">
-                <Gamepad2 className="h-6 w-6 text-blue-400" />
-              </div>
-
-              <div className="absolute bottom-24 right-0 rounded-2xl border border-white/10 bg-zinc-900/80 p-4 shadow-xl backdrop-blur-xl">
-                <Laptop className="h-6 w-6 text-violet-400" />
-              </div>
-            </div>
-          </div>
+    <div className="absolute inset-12 flex items-center justify-center rounded-[40px] border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.02] shadow-2xl backdrop-blur-xl">
+      <div className="flex flex-col items-center text-center">
+        <div className="relative flex h-64 w-full items-center justify-center">
+          <Image
+            src="/logo.png"
+            alt="Kobas Tech"
+            width={420}
+            height={220}
+            className="h-auto max-h-56 w-auto max-w-[90%] object-contain drop-shadow-2xl"
+            priority
+          />
         </div>
+
+        <div className="mx-auto mt-4 h-px w-32 bg-gradient-to-r from-transparent via-blue-400 to-transparent" />
+
+        <p className="mt-5 text-sm text-zinc-500">
+          Technology. Simplicity. Trust.
+        </p>
+      </div>
+    </div>
+
+    <div className="absolute left-0 top-20 rounded-2xl border border-white/10 bg-zinc-900/80 p-4 shadow-xl backdrop-blur-xl">
+      <Gamepad2 className="h-6 w-6 text-blue-400" />
+    </div>
+
+    <div className="absolute bottom-24 right-0 rounded-2xl border border-white/10 bg-zinc-900/80 p-4 shadow-xl backdrop-blur-xl">
+      <Laptop className="h-6 w-6 text-violet-400" />
+    </div>
+  </div>
+</div>
       </section>
 
       {/* CATEGORIES */}
