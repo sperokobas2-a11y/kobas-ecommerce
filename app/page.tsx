@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Header from "@/components/Header";
 import Link from "next/link";
 import {
@@ -127,26 +128,24 @@ export default async function Home() {
               <div className="absolute inset-10 rounded-[40px] bg-gradient-to-br from-blue-500/20 to-violet-600/20 blur-2xl" />
 
               <div className="absolute inset-12 flex items-center justify-center rounded-[40px] border border-white/10 bg-gradient-to-br from-white/10 to-white/2 shadow-2xl backdrop-blur-xl">
-                <div className="text-center">
-                  <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-2xl shadow-blue-500/30">
-                    <Zap className="h-12 w-12 fill-white" />
-                  </div>
+                <div className="flex flex-col items-center text-center">
+  <div className="relative flex h-64 w-full items-center justify-center">
+    <Image
+      src="/logo.png"
+      alt="Kobas Tech"
+      width={420}
+      height={220}
+      className="h-auto max-h-56 w-auto max-w-[90%] object-contain drop-shadow-2xl"
+      priority
+    />
+  </div>
 
-                  <p className="mt-7 text-3xl font-black tracking-tight">
-                    KOBAS
-                  </p>
+  <div className="mx-auto mt-4 h-px w-32 bg-gradient-to-r from-transparent via-blue-400 to-transparent" />
 
-                  <p className="mt-1 text-xs font-semibold tracking-[0.5em] text-blue-400">
-                    TECH
-                  </p>
-
-                  <div className="mx-auto mt-7 h-px w-32 bg-gradient-to-r from-transparent via-blue-400 to-transparent" />
-
-                  <p className="mt-5 text-sm text-zinc-500">
-                    Technology. Simplicity. Trust.
-                  </p>
-                </div>
-              </div>
+  <p className="mt-5 text-sm text-zinc-500">
+    Technology. Simplicity. Trust.
+  </p>
+</div>
 
               <div className="absolute left-0 top-20 rounded-2xl border border-white/10 bg-zinc-900/80 p-4 shadow-xl backdrop-blur-xl">
                 <Gamepad2 className="h-6 w-6 text-blue-400" />
