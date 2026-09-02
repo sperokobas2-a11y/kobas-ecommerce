@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { LogOut, Search, ShoppingCart, User, Zap } from "lucide-react";
+import { LogOut, Search, ShoppingCart, User } from "lucide-react";
 
 import { useCartStore } from "@/lib/store/cart-store";
 
@@ -28,18 +29,16 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#08090d]/85 backdrop-blur-xl">
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 lg:px-8">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-lg shadow-blue-500/20">
-            <Zap className="h-5 w-5 fill-white" />
-          </div>
-
-          <div>
-            <p className="text-lg font-bold tracking-tight">KOBAS</p>
-            <p className="-mt-1 text-[9px] font-semibold tracking-[0.28em] text-blue-400">
-              TECH
-            </p>
-          </div>
-        </Link>
+       <Link href="/" className="flex items-center">
+  <Image
+    src="/logo.png"
+    alt="Kobas Tech"
+    width={180}
+    height={70}
+    className="h-12 w-auto object-contain"
+    priority
+  />
+</Link>
 
         <nav className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((link) => {
