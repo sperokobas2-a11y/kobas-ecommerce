@@ -3,6 +3,7 @@ import { Package, Search, ShoppingCart, Zap } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import Header from "@/components/Header";
+export const dynamic = "force-dynamic";
 
 type RecherchePageProps = {
   searchParams: Promise<{ q?: string }>;
