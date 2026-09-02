@@ -259,7 +259,7 @@ export default async function Home() {
                   key={product.id}
                   className="group overflow-hidden rounded-2xl border border-white/8 bg-white/[0.025] transition duration-300 hover:-translate-y-1 hover:border-white/15"
                 >
-                  <Link href={`/produit/${product.slug}`}>
+                  <Link href={"/produit/" + product.slug}>
                     <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-900 to-blue-950/40">
                       {product.images?.[0] ? (
                         <img
@@ -288,7 +288,7 @@ export default async function Home() {
                       {product.category.name}
                     </p>
 
-                    <Link href={`/produit/${product.slug}`}>
+                    <Link href={"/produit/" + product.slug}>
                       <h3 className="mt-2 text-lg font-semibold transition hover:text-blue-400">
                         {product.name}
                       </h3>
