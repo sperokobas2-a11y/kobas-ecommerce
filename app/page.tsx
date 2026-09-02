@@ -1,3 +1,4 @@
+```tsx
 import Image from "next/image";
 import Header from "@/components/Header";
 import Link from "next/link";
@@ -15,6 +16,7 @@ import {
   Zap,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+
 export const dynamic = "force-dynamic";
 
 const categories = [
@@ -61,11 +63,12 @@ export default async function Home() {
 
       {/* HERO */}
       <section className="relative overflow-hidden">
-        <div className="absolute left-1/2 top-0 h-150 w-150 -translate-x-1/2 rounded-full bg-blue-600/10 blur-[120px]" />
+        <div className="absolute left-1/2 top-0 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-blue-600/10 blur-[120px]" />
 
-        <div className="absolute right-0 top-20 h-100 w-100 rounded-full bg-violet-600/10 blur-[120px]" />
+        <div className="absolute right-0 top-20 h-[400px] w-[400px] rounded-full bg-violet-600/10 blur-[120px]" />
 
-        <div className="relative mx-auto grid min-h-160 max-w-7xl items-center gap-12 px-5 py-20 lg:grid-cols-2 lg:px-8">
+        <div className="relative mx-auto grid min-h-[640px] max-w-7xl items-center gap-12 px-5 py-20 lg:grid-cols-2 lg:px-8">
+          {/* HERO CONTENT */}
           <div>
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-400/5 px-3 py-1.5 text-xs font-medium text-blue-300">
               <Sparkles className="h-3.5 w-3.5" />
@@ -122,41 +125,42 @@ export default async function Home() {
             </div>
           </div>
 
-        {/* HERO VISUAL */}
-<div className="relative hidden lg:block">
-  <div className="relative mx-auto aspect-square max-w-[520px]">
-    <div className="absolute inset-10 rounded-[40px] bg-gradient-to-br from-blue-500/20 to-violet-600/20 blur-2xl" />
+          {/* HERO VISUAL */}
+          <div className="relative hidden lg:block">
+            <div className="relative mx-auto aspect-square max-w-[520px]">
+              <div className="absolute inset-10 rounded-[40px] bg-gradient-to-br from-blue-500/20 to-violet-600/20 blur-2xl" />
 
-    <div className="absolute inset-12 flex items-center justify-center rounded-[40px] border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.02] shadow-2xl backdrop-blur-xl">
-      <div className="flex flex-col items-center text-center">
-        <div className="relative flex h-64 w-full items-center justify-center">
-          <Image
-            src="/logo.png"
-            alt="Kobas Tech"
-            width={420}
-            height={220}
-            className="h-auto max-h-56 w-auto max-w-[90%] object-contain drop-shadow-2xl"
-            priority
-          />
+              <div className="absolute inset-12 flex items-center justify-center rounded-[40px] border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.02] shadow-2xl backdrop-blur-xl">
+                <div className="flex flex-col items-center text-center">
+                  <div className="relative flex h-64 w-full items-center justify-center">
+                    <Image
+                      src="/logo.png"
+                      alt="Kobas Tech"
+                      width={420}
+                      height={220}
+                      className="h-auto max-h-56 w-auto max-w-[90%] object-contain drop-shadow-2xl"
+                      priority
+                    />
+                  </div>
+
+                  <div className="mx-auto mt-4 h-px w-32 bg-gradient-to-r from-transparent via-blue-400 to-transparent" />
+
+                  <p className="mt-5 text-sm text-zinc-500">
+                    Technology. Simplicity. Trust.
+                  </p>
+                </div>
+              </div>
+
+              <div className="absolute left-0 top-20 rounded-2xl border border-white/10 bg-zinc-900/80 p-4 shadow-xl backdrop-blur-xl">
+                <Gamepad2 className="h-6 w-6 text-blue-400" />
+              </div>
+
+              <div className="absolute bottom-24 right-0 rounded-2xl border border-white/10 bg-zinc-900/80 p-4 shadow-xl backdrop-blur-xl">
+                <Laptop className="h-6 w-6 text-violet-400" />
+              </div>
+            </div>
+          </div>
         </div>
-
-        <div className="mx-auto mt-4 h-px w-32 bg-gradient-to-r from-transparent via-blue-400 to-transparent" />
-
-        <p className="mt-5 text-sm text-zinc-500">
-          Technology. Simplicity. Trust.
-        </p>
-      </div>
-    </div>
-
-    <div className="absolute left-0 top-20 rounded-2xl border border-white/10 bg-zinc-900/80 p-4 shadow-xl backdrop-blur-xl">
-      <Gamepad2 className="h-6 w-6 text-blue-400" />
-    </div>
-
-    <div className="absolute bottom-24 right-0 rounded-2xl border border-white/10 bg-zinc-900/80 p-4 shadow-xl backdrop-blur-xl">
-      <Laptop className="h-6 w-6 text-violet-400" />
-    </div>
-  </div>
-</div>
       </section>
 
       {/* CATEGORIES */}
@@ -256,28 +260,28 @@ export default async function Home() {
                   className="group overflow-hidden rounded-2xl border border-white/8 bg-white/[0.025] transition duration-300 hover:-translate-y-1 hover:border-white/15"
                 >
                   <Link href={`/produit/${product.slug}`}>
-  <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-900 to-blue-950/40">
-    {product.images?.[0] ? (
-      <img
-        src={product.images[0]}
-        alt={product.name}
-        className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-      />
-    ) : (
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-blue-400 backdrop-blur-xl transition duration-500 group-hover:scale-110">
-          <Zap className="h-9 w-9" />
-        </div>
-      </div>
-    )}
+                    <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-900 to-blue-950/40">
+                      {product.images?.[0] ? (
+                        <img
+                          src={product.images[0]}
+                          alt={product.name}
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-blue-400 backdrop-blur-xl transition duration-500 group-hover:scale-110">
+                            <Zap className="h-9 w-9" />
+                          </div>
+                        </div>
+                      )}
 
-    {product.featured && (
-      <span className="absolute left-4 top-4 rounded-full border border-blue-400/20 bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold tracking-wider text-blue-300">
-        POPULAIRE
-      </span>
-    )}
-  </div>
-</Link>
+                      {product.featured && (
+                        <span className="absolute left-4 top-4 rounded-full border border-blue-400/20 bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold tracking-wider text-blue-300">
+                          POPULAIRE
+                        </span>
+                      )}
+                    </div>
+                  </Link>
 
                   <div className="p-5">
                     <p className="text-xs font-medium text-blue-400">
@@ -382,3 +386,4 @@ export default async function Home() {
     </main>
   );
 }
+```
