@@ -14,6 +14,7 @@ import {
 
 import { prisma } from "@/lib/prisma";
 import AddToCartButton from "@/components/add-to-cart-button";
+export const dynamic = "force-dynamic";
 
 type ProductPageProps = {
   params: Promise<{
