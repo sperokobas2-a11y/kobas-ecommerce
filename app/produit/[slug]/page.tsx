@@ -144,23 +144,29 @@ export default async function ProductPage({
 
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-20">
           {/* IMAGE / VISUEL */}
-          <div>
-            <div className="relative aspect-square overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-zinc-900 via-zinc-900 to-blue-950/40">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative flex h-40 w-40 items-center justify-center rounded-[40px] border border-white/10 bg-white/5 shadow-2xl backdrop-blur-xl">
-                  <div className="absolute inset-0 rounded-[40px] bg-blue-500/10 blur-2xl" />
+          <div className="relative aspect-square overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-zinc-900 via-zinc-900 to-blue-950/40">
+  {product.images?.[0] ? (
+    <img
+      src={product.images[0]}
+      alt={product.name}
+      className="h-full w-full object-cover"
+    />
+  ) : (
+    <div className="absolute inset-0 flex items-center justify-center">
+      <div className="relative flex h-40 w-40 items-center justify-center rounded-[40px] border border-white/10 bg-white/5 shadow-2xl backdrop-blur-xl">
+        <div className="absolute inset-0 rounded-[40px] bg-blue-500/10 blur-2xl" />
 
-                  <Zap className="relative h-16 w-16 text-blue-400" />
-                </div>
-              </div>
+        <Zap className="relative h-16 w-16 text-blue-400" />
+      </div>
+    </div>
+  )}
 
-              {product.featured && (
-                <span className="absolute left-6 top-6 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-bold tracking-wider text-blue-300">
-                  PRODUIT POPULAIRE
-                </span>
-              )}
-            </div>
-          </div>
+  {product.featured && (
+    <span className="absolute left-6 top-6 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-bold tracking-wider text-blue-300">
+      PRODUIT POPULAIRE
+    </span>
+  )}
+</div>
 
           {/* INFORMATIONS */}
           <div className="flex flex-col justify-center">
