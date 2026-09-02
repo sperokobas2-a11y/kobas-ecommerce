@@ -10,6 +10,7 @@ import {
 
 import { prisma } from "@/lib/prisma";
 import Header from "@/components/Header";
+export const dynamic = "force-dynamic";
 
 // Icônes de secours si la catégorie n'a pas d'image, associées par nom
 const FALLBACK_ICONS: Record<string, typeof Gamepad2> = {
