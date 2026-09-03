@@ -1,3 +1,4 @@
+```tsx
 "use client";
 
 import { useState } from "react";
@@ -12,19 +13,18 @@ type AddToCartButtonProps = {
     price: number;
     stock: number;
   };
+  quantity: number;
 };
 
 export default function AddToCartButton({
   product,
+  quantity,
 }: AddToCartButtonProps) {
   const addItem = useCartStore((state) => state.addItem);
-
   const [added, setAdded] = useState(false);
 
   function handleAddToCart() {
-    console.log("Produit ajouté :", product);
-
-    addItem(product);
+    addItem(product, quantity);
     setAdded(true);
 
     setTimeout(() => {
@@ -59,3 +59,4 @@ export default function AddToCartButton({
     </button>
   );
 }
+```
