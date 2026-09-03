@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import {
   ArrowLeft,
+  Download,
   ImagePlus,
   Loader2,
   Package,
@@ -32,6 +33,7 @@ export default function NouveauProduitPage() {
   const [sku, setSku] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [image, setImage] = useState("");
+  const [downloadUrl, setDownloadUrl] = useState("");
   const [featured, setFeatured] = useState(false);
   const [active, setActive] = useState(true);
 
@@ -103,6 +105,7 @@ export default function NouveauProduitPage() {
             sku: sku || null,
             categoryId,
             images: image ? [image] : [],
+            downloadUrl: downloadUrl || null,
             featured,
             active,
           }),
@@ -334,6 +337,33 @@ export default function NouveauProduitPage() {
                 value={image}
                 onChange={setImage}
                 placeholder="https://..."
+              />
+            </div>
+          </section>
+
+          {/* TÉLÉCHARGEMENT */}
+          <section className="rounded-2xl border border-white/10 bg-white/[0.025] p-6">
+            <div className="flex items-center gap-3">
+              <Download className="h-5 w-5 text-emerald-400" />
+
+              <div>
+                <h2 className="font-bold">
+                  Fichier téléchargeable (optionnel)
+                </h2>
+
+                <p className="mt-1 text-xs text-zinc-600">
+                  Pour un produit numérique. Le client recevra ce lien
+                  après confirmation du paiement.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <Field
+                label="Lien de téléchargement"
+                value={downloadUrl}
+                onChange={setDownloadUrl}
+                placeholder="https://gofile.io/d/..."
               />
             </div>
           </section>
