@@ -271,15 +271,16 @@ export default async function ProductPage({
                 }}
               />
 
-              <BuyNowButton
-  product={{
-    id: product.id,
-    name: product.name,
-    slug: product.slug,
-    price: product.price,
-    stock: product.stock,
-  }}
-/>
+                           <BuyNowButton
+                product={{
+                  id: product.id,
+                  name: product.name,
+                  slug: product.slug,
+                  price: product.price,
+                  stock: product.stock,
+                }}
+              />
+            </div>
 
             {/* GARANTIES */}
             <div className="mt-10 grid gap-4 border-t border-white/10 pt-8 sm:grid-cols-2">
