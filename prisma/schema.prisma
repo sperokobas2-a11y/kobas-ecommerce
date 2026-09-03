@@ -204,6 +204,18 @@ model Favorite {
   @@index([customerId])
 }
 
+model LoginAttempt {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  ip        String
+  attempts  Int      @default(1)
+  blockedUntil DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ip])
+}
+
 enum OrderStatus {
   PENDING
   CONFIRMED
