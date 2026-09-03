@@ -14,6 +14,7 @@ import {
 
 import { prisma } from "@/lib/prisma";
 import AddToCartButton from "@/components/add-to-cart-button";
+import BuyNowButton from "@/components/buy-now-button";
 export const dynamic = "force-dynamic";
 
 type ProductPageProps = {
@@ -270,16 +271,15 @@ export default async function ProductPage({
                 }}
               />
 
-              <button
-                type="button"
-                disabled={product.stock <= 0}
-                className="flex h-13 flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 text-sm font-semibold transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                Acheter maintenant
-
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
+              <BuyNowButton
+  product={{
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    price: product.price,
+    stock: product.stock,
+  }}
+/>
 
             {/* GARANTIES */}
             <div className="mt-10 grid gap-4 border-t border-white/10 pt-8 sm:grid-cols-2">
