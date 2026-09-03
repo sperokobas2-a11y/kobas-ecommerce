@@ -28,7 +28,14 @@ function createLinkCookieValue(customerId: string) {
 }
 
 function verifyLinkCookieValue(value: string) {
-  const [customerId, signature] = value.split(".");
+  const separatorIndex = value.lastIndexOf(".");
+
+  if (separatorIndex <= 0) {
+    return null;
+  }
+
+  const customerId = value.slice(0, separatorIndex);
+  const signature = value.slice(separatorIndex + 1);
 
   if (!customerId || !signature) {
     return null;
@@ -36,9 +43,16 @@ function verifyLinkCookieValue(value: string) {
 
   const expectedSignature = createLinkSignature(customerId);
 
+  const receivedBuffer = Buffer.from(signature, "utf8");
+  const expectedBuffer = Buffer.from(expectedSignature, "utf8");
+
+  if (receivedBuffer.length !== expectedBuffer.length) {
+    return null;
+  }
+
   const isValid = crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
+    receivedBuffer,
+    expectedBuffer
   );
 
   return isValid ? customerId : null;
@@ -183,11 +197,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
        * LIEN GOOGLE EXPLICITE
        * ============================================================
        *
-       * Si le cookie de liaison existe, on ne fait PAS une connexion
-       * Google normale.
-       *
-       * On vérifie que le cookie appartient bien au client qui veut
-       * effectuer la liaison.
+       * Le cookie est créé uniquement lorsqu'un client connecté
+       * demande explicitement de lier un compte Google.
        */
 
       const cookieStore = await cookies();
@@ -215,8 +226,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         /*
-         * Vérifier que ce compte Google n'est pas déjà lié
-         * à un autre client.
+         * Vérifier que ce compte Google n'est pas déjà
+         * associé à un autre client.
          */
         const googleOwner = await prisma.customer.findFirst({
           where: {
@@ -241,12 +252,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         /*
          * Le client possède déjà un autre compte Google.
-         * On refuse de remplacer silencieusement l'ancien.
+         * On ne remplace jamais silencieusement l'ancien.
          */
         if (customer.googleId) {
           return false;
         }
 
+        /*
+         * Association explicite au compte actuellement ciblé
+         * par le cookie signé.
+         */
         await prisma.customer.update({
           where: {
             id: customer.id,
@@ -277,6 +292,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
       });
 
+      /*
+       * Aucun compte Kobas Tech avec cet email :
+       * création d'un nouveau compte client.
+       */
       if (!customer) {
         const firstName =
           googleProfile.given_name ||
@@ -301,6 +320,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           },
         });
       } else if (!customer.googleId) {
+        /*
+         * Compte existant sans Google :
+         * connexion Google normale par même adresse email.
+         */
         customer = await prisma.customer.update({
           where: {
             id: customer.id,
@@ -314,6 +337,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           },
         });
       } else if (customer.googleId !== googleId) {
+        /*
+         * L'adresse email existe mais appartient déjà
+         * à un autre compte Google.
+         */
         return false;
       }
 
@@ -330,19 +357,52 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
       }
 
-      if (account?.provider === "google" && user.email) {
-        const customer = await prisma.customer.findUnique({
-          where: {
-            email: user.email.toLowerCase().trim(),
-          },
-          select: {
-            id: true,
-          },
-        });
+      /*
+       * Pour Google, on retrouve en priorité le client
+       * grâce au googleId.
+       *
+       * Cela est particulièrement important lorsqu'un client
+       * a lié une adresse Google différente de son adresse
+       * email Kobas Tech.
+       */
+      if (account?.provider === "google") {
+        const googleId = account.providerAccountId;
 
-        if (customer) {
-          token.id = customer.id;
-          token.role = "customer";
+        if (googleId) {
+          const customerByGoogle = await prisma.customer.findUnique({
+            where: {
+              googleId,
+            },
+            select: {
+              id: true,
+            },
+          });
+
+          if (customerByGoogle) {
+            token.id = customerByGoogle.id;
+            token.role = "customer";
+            return token;
+          }
+        }
+
+        /*
+         * Fallback pour les connexions Google normales
+         * basées sur la même adresse email.
+         */
+        if (user.email) {
+          const customerByEmail = await prisma.customer.findUnique({
+            where: {
+              email: user.email.toLowerCase().trim(),
+            },
+            select: {
+              id: true,
+            },
+          });
+
+          if (customerByEmail) {
+            token.id = customerByEmail.id;
+            token.role = "customer";
+          }
         }
       }
 
