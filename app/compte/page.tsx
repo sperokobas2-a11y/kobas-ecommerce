@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   ClipboardList,
+  Download,
   Loader2,
   LogOut,
   Mail,
@@ -33,6 +34,7 @@ type OrderItem = {
   name: string;
   quantity: number;
   total: number;
+  downloadUrl: string | null;
 };
 
 type Order = {
@@ -429,17 +431,29 @@ export default function ComptePage() {
 
                     <div className="mt-4 divide-y divide-white/5 border-t border-white/5">
                       {order.items.map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex items-center justify-between py-2 text-sm"
-                        >
-                          <span className="text-zinc-400">
-                            {item.quantity} × {item.name}
-                          </span>
+                        <div key={item.id} className="py-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-zinc-400">
+                              {item.quantity} × {item.name}
+                            </span>
 
-                          <span className="text-zinc-300">
-                            {item.total.toLocaleString("fr-FR")} FCFA
-                          </span>
+                            <span className="text-zinc-300">
+                              {item.total.toLocaleString("fr-FR")} FCFA
+                            </span>
+                          </div>
+
+                          {item.downloadUrl &&
+                            order.paymentStatus === "PAID" && (
+                              
+                                href={item.downloadUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-2 inline-flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition hover:bg-emerald-500/20"
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                                Télécharger le fichier
+                              </a>
+                            )}
                         </div>
                       ))}
                     </div>
