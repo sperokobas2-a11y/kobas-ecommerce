@@ -25,11 +25,17 @@ export default function AdminLoginPage() {
     });
 
     if (result?.error) {
-  setError(
-    result.error.includes("Trop de tentatives")
-      ? result.error
-      : "Email ou mot de passe incorrect."
-  );
+  const statusResponse = await fetch("/api/admin/login-status");
+  const statusData = await statusResponse.json();
+
+  if (statusData.blocked) {
+    setError(
+      `Trop de tentatives échouées. Réessayez dans ${statusData.remainingMinutes} minute(s).`
+    );
+  } else {
+    setError("Email ou mot de passe incorrect.");
+  }
+
   setLoading(false);
   return;
 }
