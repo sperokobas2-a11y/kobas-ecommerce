@@ -1,3 +1,4 @@
+import ProductReviews from "@/components/product-reviews";
 import Footer from "@/components/Footer";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -444,7 +445,7 @@ export default async function ProductPage({
                 </div>
               </div>
 
-              {/* RÉFÉRENCE */}
+           {/* RÉFÉRENCE */}
               {product.sku && (
                 <p className="mt-6 text-xs text-muted-foreground">
                   Référence : {product.sku}
@@ -452,6 +453,8 @@ export default async function ProductPage({
               )}
             </div>
           </div>
+
+          <ProductReviews productId={product.id} />
         </div>
 
         {/* FOOTER */}
