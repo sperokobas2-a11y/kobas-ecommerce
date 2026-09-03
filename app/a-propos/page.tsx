@@ -1,4 +1,3 @@
-```tsx
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -443,4 +442,3 @@ export default function AProposPage() {
     </>
   );
 }
-```
