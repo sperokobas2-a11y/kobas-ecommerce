@@ -9,6 +9,7 @@ import {
   Menu,
   Search,
   ShoppingCart,
+  Heart,
   User,
   X,
 } from "lucide-react";
@@ -77,6 +78,16 @@ export default function Header() {
           >
             <Search className="h-4 w-4" />
           </Link>
+
+          {isCustomerLoggedIn && (
+  <Link
+    href="/favoris"
+    aria-label="Favoris"
+    className="hidden h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-zinc-400 transition hover:border-white/20 hover:bg-white/5 hover:text-white sm:flex"
+  >
+    <Heart className="h-4 w-4" />
+  </Link>
+)}
 
           <Link
             href="/panier"
