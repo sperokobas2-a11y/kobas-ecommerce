@@ -442,9 +442,8 @@ export default function ComptePage() {
                             </span>
                           </div>
 
-                          {item.downloadUrl &&
-  order.paymentStatus === "PAID" && (
-    
+  {item.downloadUrl &&
+    order.paymentStatus === "PAID" && (
       <a href={item.downloadUrl}
       target="_blank"
       rel="noopener noreferrer"
