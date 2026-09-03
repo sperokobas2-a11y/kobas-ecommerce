@@ -1,3 +1,4 @@
+import FavoriteButton from "@/components/favorite-button";
 import ProductReviews from "@/components/product-reviews";
 import Footer from "@/components/Footer";
 import type { Metadata } from "next";
@@ -395,10 +396,14 @@ export default async function ProductPage({
 
               {/* ACTIONS */}
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                <AddToCartButton product={product} />
+  <AddToCartButton product={product} />
 
-                <BuyNowButton product={product} />
-              </div>
+  <BuyNowButton product={product} />
+</div>
+
+<div className="mt-3">
+  <FavoriteButton productId={product.id} variant="full" />
+</div>
 
               {/* GARANTIES */}
               <div className="mt-8 grid gap-4 rounded-2xl border border-border/50 bg-muted/30 p-5 sm:grid-cols-3">
