@@ -1,7 +1,22 @@
 import type { MetadataRoute } from "next";
+import { prisma } from "@/lib/prisma";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://kobas-ecommerce.vercel.app";
+
+  const products = await prisma.product.findMany({
+    select: {
+      slug: true,
+      updatedAt: true,
+    },
+  });
+
+  const productUrls: MetadataRoute.Sitemap = products.map((product) => ({
+    url: baseUrl + "/produit/" + product.slug,
+    lastModified: product.updatedAt,
+    changeFrequency: "weekly",
+    priority: 0.8,
+  }));
 
   return [
     {
@@ -11,10 +26,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: `${baseUrl}/recherche`,
+      url: baseUrl + "/recherche",
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    ...productUrls,
   ];
 }
