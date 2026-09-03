@@ -288,7 +288,6 @@ export default function PanierPage() {
 
       {/* FOOTER */}
      <Footer />
-      </footer>
     </main>
   );
 }
