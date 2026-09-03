@@ -8,10 +8,7 @@ type RouteContext = {
   }>;
 };
 
-export async function GET(
-  request: Request,
-  context: RouteContext
-) {
+export async function GET(request: Request, context: RouteContext) {
   try {
     const session = await auth();
 
@@ -49,25 +46,18 @@ export async function GET(
       product,
     });
   } catch (error) {
-    console.error(
-      "GET /api/admin/products/[id]:",
-      error
-    );
+    console.error("GET /api/admin/products/[id]:", error);
 
     return NextResponse.json(
       {
-        error:
-          "Impossible de charger le produit.",
+        error: "Impossible de charger le produit.",
       },
       { status: 500 }
     );
   }
 }
 
-export async function PATCH(
-  request: Request,
-  context: RouteContext
-) {
+export async function PATCH(request: Request, context: RouteContext) {
   try {
     const session = await auth();
 
@@ -91,6 +81,7 @@ export async function PATCH(
       sku,
       categoryId,
       images,
+      downloadUrl,
       featured,
       active,
     } = body;
@@ -98,8 +89,7 @@ export async function PATCH(
     if (!name?.trim()) {
       return NextResponse.json(
         {
-          error:
-            "Le nom du produit est obligatoire.",
+          error: "Le nom du produit est obligatoire.",
         },
         { status: 400 }
       );
@@ -108,8 +98,7 @@ export async function PATCH(
     if (!description?.trim()) {
       return NextResponse.json(
         {
-          error:
-            "La description est obligatoire.",
+          error: "La description est obligatoire.",
         },
         { status: 400 }
       );
@@ -118,8 +107,7 @@ export async function PATCH(
     if (!categoryId) {
       return NextResponse.json(
         {
-          error:
-            "La catégorie est obligatoire.",
+          error: "La catégorie est obligatoire.",
         },
         { status: 400 }
       );
@@ -151,12 +139,11 @@ export async function PATCH(
       );
     }
 
-    const existingProduct =
-      await prisma.product.findUnique({
-        where: {
-          id,
-        },
-      });
+    const existingProduct = await prisma.product.findUnique({
+      where: {
+        id,
+      },
+    });
 
     if (!existingProduct) {
       return NextResponse.json(
@@ -167,44 +154,38 @@ export async function PATCH(
       );
     }
 
-    const category =
-      await prisma.category.findUnique({
-        where: {
-          id: categoryId,
-        },
-      });
+    const category = await prisma.category.findUnique({
+      where: {
+        id: categoryId,
+      },
+    });
 
     if (!category) {
       return NextResponse.json(
         {
-          error:
-            "La catégorie sélectionnée n'existe pas.",
+          error: "La catégorie sélectionnée n'existe pas.",
         },
         { status: 400 }
       );
     }
 
     const finalSku =
-      typeof sku === "string" && sku.trim()
-        ? sku.trim()
-        : null;
+      typeof sku === "string" && sku.trim() ? sku.trim() : null;
 
     if (finalSku) {
-      const skuProduct =
-        await prisma.product.findFirst({
-          where: {
-            sku: finalSku,
-            NOT: {
-              id,
-            },
+      const skuProduct = await prisma.product.findFirst({
+        where: {
+          sku: finalSku,
+          NOT: {
+            id,
           },
-        });
+        },
+      });
 
       if (skuProduct) {
         return NextResponse.json(
           {
-            error:
-              "Ce SKU est déjà utilisé par un autre produit.",
+            error: "Ce SKU est déjà utilisé par un autre produit.",
           },
           { status: 409 }
         );
@@ -214,75 +195,73 @@ export async function PATCH(
     const finalImages = Array.isArray(images)
       ? images.filter(
           (image): image is string =>
-            typeof image === "string" &&
-            image.trim().length > 0
+            typeof image === "string" && image.trim().length > 0
         )
       : [];
 
-    const updatedProduct =
-      await prisma.product.update({
-        where: {
-          id,
-        },
-        data: {
-          name: name.trim(),
-          description: description.trim(),
+    const finalDownloadUrl =
+      typeof downloadUrl === "string" && downloadUrl.trim().length > 0
+        ? downloadUrl.trim()
+        : null;
 
-          price,
+    const updatedProduct = await prisma.product.update({
+      where: {
+        id,
+      },
+      data: {
+        name: name.trim(),
+        description: description.trim(),
 
-          comparePrice:
-            typeof comparePrice === "number" &&
-            Number.isFinite(comparePrice) &&
-            comparePrice > 0
-              ? comparePrice
-              : null,
+        price,
 
-          stock,
+        comparePrice:
+          typeof comparePrice === "number" &&
+          Number.isFinite(comparePrice) &&
+          comparePrice > 0
+            ? comparePrice
+            : null,
 
-          sku: finalSku,
+        stock,
 
-          images: finalImages,
+        sku: finalSku,
 
-          featured: Boolean(featured),
-          active: Boolean(active),
+        images: finalImages,
 
-          categoryId,
-        },
+        downloadUrl: finalDownloadUrl,
 
-        include: {
-          category: {
-            select: {
-              id: true,
-              name: true,
-            },
+        featured: Boolean(featured),
+        active: Boolean(active),
+
+        categoryId,
+      },
+
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
           },
         },
-      });
+      },
+    });
 
     return NextResponse.json({
       success: true,
       product: updatedProduct,
     });
   } catch (error) {
-    console.error(
-      "PATCH /api/admin/products/[id]:",
-      error
-    );
+    console.error("PATCH /api/admin/products/[id]:", error);
 
     return NextResponse.json(
       {
-        error:
-          "Impossible de modifier le produit.",
+        error: "Impossible de modifier le produit.",
       },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(
-  request: Request,
-  context: RouteContext
-) {
+export async function DELETE(request: Request, context: RouteContext) {
   try {
     const session = await auth();
 
@@ -295,12 +274,11 @@ export async function DELETE(
 
     const { id } = await context.params;
 
-    const product =
-      await prisma.product.findUnique({
-        where: {
-          id,
-        },
-      });
+    const product = await prisma.product.findUnique({
+      where: {
+        id,
+      },
+    });
 
     if (!product) {
       return NextResponse.json(
@@ -322,15 +300,11 @@ export async function DELETE(
       message: "Produit supprimé avec succès.",
     });
   } catch (error) {
-    console.error(
-      "DELETE /api/admin/products/[id]:",
-      error
-    );
+    console.error("DELETE /api/admin/products/[id]:", error);
 
     return NextResponse.json(
       {
-        error:
-          "Impossible de supprimer le produit.",
+        error: "Impossible de supprimer le produit.",
       },
       { status: 500 }
     );
