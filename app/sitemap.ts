@@ -5,6 +5,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://kobas-ecommerce.vercel.app";
 
   const products = await prisma.product.findMany({
+    where: {
+      active: true,
+    },
     select: {
       slug: true,
       updatedAt: true,
