@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Kobas Tech",
   description: "Votre partenaire des solutions digitales",
+  verification: {
+  google: "A3Du6NESia-amFVttH14hBsIyEnhvgWc32MtOkK6yVU",
+},
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
