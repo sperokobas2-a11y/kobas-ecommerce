@@ -8,9 +8,12 @@ export async function PATCH(request: Request) {
   try {
     const session = await auth();
 
-    if (!session?.user?.id || session.user.role !== "customer") {
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { error: "Vous devez être connecté pour modifier votre mot de passe." },
+        {
+          error:
+            "Vous devez être connecté pour modifier votre mot de passe.",
+        },
         { status: 401 }
       );
     }
@@ -29,14 +32,19 @@ export async function PATCH(request: Request) {
 
     if (!newPassword) {
       return NextResponse.json(
-        { error: "Le nouveau mot de passe est obligatoire." },
+        {
+          error: "Le nouveau mot de passe est obligatoire.",
+        },
         { status: 400 }
       );
     }
 
     if (newPassword.length < 8) {
       return NextResponse.json(
-        { error: "Le nouveau mot de passe doit contenir au moins 8 caractères." },
+        {
+          error:
+            "Le nouveau mot de passe doit contenir au moins 8 caractères.",
+        },
         { status: 400 }
       );
     }
@@ -53,16 +61,21 @@ export async function PATCH(request: Request) {
 
     if (!customer) {
       return NextResponse.json(
-        { error: "Compte client introuvable." },
+        {
+          error: "Compte client introuvable.",
+        },
         { status: 404 }
       );
     }
 
-    // Compte Google sans mot de passe : on permet d'en définir un.
+    // Si le compte possède déjà un mot de passe,
+    // l'ancien mot de passe est obligatoire.
     if (customer.password) {
       if (!currentPassword) {
         return NextResponse.json(
-          { error: "Votre ancien mot de passe est obligatoire." },
+          {
+            error: "Votre ancien mot de passe est obligatoire.",
+          },
           { status: 400 }
         );
       }
@@ -74,26 +87,31 @@ export async function PATCH(request: Request) {
 
       if (!isValid) {
         return NextResponse.json(
-          { error: "Votre ancien mot de passe est incorrect." },
+          {
+            error: "Votre ancien mot de passe est incorrect.",
+          },
+          { status: 400 }
+        );
+      }
+
+      const samePassword = await bcrypt.compare(
+        newPassword,
+        customer.password
+      );
+
+      if (samePassword) {
+        return NextResponse.json(
+          {
+            error:
+              "Le nouveau mot de passe doit être différent de l'ancien.",
+          },
           { status: 400 }
         );
       }
     }
 
-    const samePassword =
-      customer.password &&
-      (await bcrypt.compare(newPassword, customer.password));
-
-    if (samePassword) {
-      return NextResponse.json(
-        {
-          error:
-            "Le nouveau mot de passe doit être différent de l'ancien.",
-        },
-        { status: 400 }
-      );
-    }
-
+    // Compte Google sans mot de passe :
+    // on permet de définir directement un mot de passe.
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 
     await prisma.customer.update({
@@ -110,10 +128,15 @@ export async function PATCH(request: Request) {
       message: "Mot de passe modifié avec succès.",
     });
   } catch (error) {
-    console.error("PATCH /api/customers/me/password:", error);
+    console.error(
+      "PATCH /api/customers/me/password:",
+      error
+    );
 
     return NextResponse.json(
-      { error: "Impossible de modifier le mot de passe." },
+      {
+        error: "Impossible de modifier le mot de passe.",
+      },
       { status: 500 }
     );
   }
