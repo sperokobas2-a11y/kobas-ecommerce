@@ -6,7 +6,10 @@ export async function GET() {
   try {
     const session = await auth();
 
-    if (!session?.user || (session.user as { role?: string }).role !== "customer") {
+    if (
+      !session?.user ||
+      (session.user as { role?: string }).role !== "customer"
+    ) {
       return NextResponse.json(
         { error: "Non autorisé." },
         { status: 401 }
@@ -14,6 +17,13 @@ export async function GET() {
     }
 
     const customerId = (session.user as { id?: string }).id;
+
+    if (!customerId) {
+      return NextResponse.json(
+        { error: "Identifiant client introuvable." },
+        { status: 401 }
+      );
+    }
 
     const customer = await prisma.customer.findUnique({
       where: { id: customerId },
@@ -36,6 +46,10 @@ export async function GET() {
         address: customer.address,
         city: customer.city,
         country: customer.country,
+
+        // Informations de sécurité du compte
+        hasGoogleAccount: Boolean(customer.googleId),
+        hasPassword: Boolean(customer.password),
       },
     });
   } catch (error) {
@@ -52,7 +66,10 @@ export async function PATCH(request: Request) {
   try {
     const session = await auth();
 
-    if (!session?.user || (session.user as { role?: string }).role !== "customer") {
+    if (
+      !session?.user ||
+      (session.user as { role?: string }).role !== "customer"
+    ) {
       return NextResponse.json(
         { error: "Non autorisé." },
         { status: 401 }
@@ -60,13 +77,30 @@ export async function PATCH(request: Request) {
     }
 
     const customerId = (session.user as { id?: string }).id;
+
+    if (!customerId) {
+      return NextResponse.json(
+        { error: "Identifiant client introuvable." },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
 
-    const { firstName, lastName, whatsapp, address, city } = body;
+    const {
+      firstName,
+      lastName,
+      whatsapp,
+      address,
+      city,
+    } = body;
 
     if (!firstName || !lastName || !whatsapp) {
       return NextResponse.json(
-        { error: "Le prénom, le nom et le WhatsApp sont obligatoires." },
+        {
+          error:
+            "Le prénom, le nom et le WhatsApp sont obligatoires.",
+        },
         { status: 400 }
       );
     }
@@ -94,6 +128,10 @@ export async function PATCH(request: Request) {
         address: updatedCustomer.address,
         city: updatedCustomer.city,
         country: updatedCustomer.country,
+
+        // Informations de sécurité du compte
+        hasGoogleAccount: Boolean(updatedCustomer.googleId),
+        hasPassword: Boolean(updatedCustomer.password),
       },
     });
   } catch (error) {
