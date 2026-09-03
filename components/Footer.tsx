@@ -16,35 +16,23 @@ export default function Footer() {
           </p>
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/5 pt-5 text-xs text-zinc-400">
-          <Link
-            href="/mentions-legales"
-            className="transition hover:text-white"
-          >
-            Mentions légales
-          </Link>
-
-          <Link
-            href="/cgv"
-            className="transition hover:text-white"
-          >
-            Conditions générales de vente
-          </Link>
-
-          <Link
-            href="/confidentialite"
-            className="transition hover:text-white"
-          >
-            Politique de confidentialité
-          </Link>
-
-          <Link
-            href="/contact"
-            className="transition hover:text-white"
-          >
-            Contact
-          </Link>
-        </div>
+        <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/5 pt-5 text-xs text-zinc-600">
+  <Link href="/suivi-commande" className="transition hover:text-zinc-400">
+    Suivre ma commande
+  </Link>
+  <Link href="/mentions-legales" className="transition hover:text-zinc-400">
+    Mentions légales
+  </Link>
+  <Link href="/cgv" className="transition hover:text-zinc-400">
+    Conditions générales de vente
+  </Link>
+  <Link href="/confidentialite" className="transition hover:text-zinc-400">
+    Politique de confidentialité
+  </Link>
+  <Link href="/contact" className="transition hover:text-zinc-400">
+    Contact
+  </Link>
+</div>
       </div>
     </footer>
   );
