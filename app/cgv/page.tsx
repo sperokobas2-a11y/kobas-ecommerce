@@ -112,14 +112,14 @@ export default function CGVPage() {
                 Kobas Tech.
               </li>
               <li>
-                Toute demande de remboursement doit être adressée via le{" "}
-                
-                  href="/contact"
-                  className="text-blue-400 hover:underline"
-                >
-                  formulaire de contact
-                </a>{" "}
-                ou par WhatsApp, en précisant le numéro de commande.
+               Toute demande de remboursement doit être adressée via le{" "}
+
+  href="/contact"
+  className="text-blue-400 hover:underline"
+>
+  formulaire de contact
+</a>{" "}
+ou par WhatsApp, en précisant le numéro de commande.
               </li>
               <li>
                 Les remboursements validés sont effectués par le même moyen
