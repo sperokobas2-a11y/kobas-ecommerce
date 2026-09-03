@@ -33,6 +33,7 @@ export async function generateMetadata({
       select: {
         name: true,
         description: true,
+        slug: true,
       },
     });
 
