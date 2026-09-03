@@ -30,6 +30,13 @@ function generateOrderNumber() {
   return `KOB-${random}`;
 }
 
+class InsufficientStockError extends Error {
+  constructor(productName: string) {
+    super(`Stock insuffisant pour "${productName}". Quelqu'un vient peut-être de l'acheter, réessayez.`);
+    this.name = "InsufficientStockError";
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as OrderRequest;
@@ -85,7 +92,9 @@ export async function POST(request: Request) {
     }
 
     /* =========================
-       VÉRIFICATION DES PRODUITS
+       VÉRIFICATION INITIALE DES PRODUITS
+       (pour les messages d'erreur et le calcul du total —
+       la vraie garantie anti-survente se fait dans la transaction)
     ========================= */
 
     const products = await Promise.all(
@@ -151,15 +160,13 @@ export async function POST(request: Request) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    let customer;
+    let customerId: string;
 
     if (isLoggedInCustomer) {
-      const customerId = (session!.user as { id?: string }).id;
+      const id = (session!.user as { id?: string }).id as string;
 
-      // On réutilise le compte connecté, en mettant à jour ses infos
-      // de livraison si elles ont changé sur ce formulaire.
-      customer = await prisma.customer.update({
-        where: { id: customerId },
+      const updatedCustomer = await prisma.customer.update({
+        where: { id },
         data: {
           firstName: firstName.trim(),
           lastName: lastName.trim(),
@@ -168,15 +175,15 @@ export async function POST(request: Request) {
           city: city?.trim() || null,
         },
       });
+
+      customerId = updatedCustomer.id;
     } else {
-      // Achat invité : on réutilise un Customer existant avec cet email
-      // s'il existe déjà (créé par une commande précédente), sinon on en crée un.
       const existingCustomer = await prisma.customer.findUnique({
         where: { email: normalizedEmail },
       });
 
       if (existingCustomer) {
-        customer = await prisma.customer.update({
+        const updatedCustomer = await prisma.customer.update({
           where: { id: existingCustomer.id },
           data: {
             firstName: firstName.trim(),
@@ -186,8 +193,10 @@ export async function POST(request: Request) {
             city: city?.trim() || null,
           },
         });
+
+        customerId = updatedCustomer.id;
       } else {
-        customer = await prisma.customer.create({
+        const newCustomer = await prisma.customer.create({
           data: {
             firstName: firstName.trim(),
             lastName: lastName.trim(),
@@ -198,66 +207,70 @@ export async function POST(request: Request) {
             country: "Bénin",
           },
         });
+
+        customerId = newCustomer.id;
       }
     }
 
     /* =========================
-       CRÉATION DE LA COMMANDE
+       TRANSACTION ATOMIQUE :
+       décrément conditionnel du stock + création de la commande.
+       Si le stock d'un produit a changé entre-temps (achat concurrent),
+       toute la transaction échoue et rien n'est enregistré.
     ========================= */
 
     const orderNumber = generateOrderNumber();
 
-    const order = await prisma.order.create({
-      data: {
-        orderNumber,
-
-        customerId: customer.id,
-
-        subtotal,
-        shipping,
-        total,
-
-        status: "PENDING",
-        paymentStatus: "PENDING",
-
-        paymentMethod: (paymentMethod as PaymentMethod) || "MTN_MONEY",
-
-       items: {
-  create: products.map(({ product, quantity }) => ({
-    productId: product.id,
-    name: product.name,
-    price: product.price,
-    quantity,
-    total: product.price * quantity,
-    downloadUrl: product.downloadUrl || null,
-  })),
-},
-      },
-
-      include: {
-        items: true,
-        customer: true,
-      },
-    });
-
-    /* =========================
-       MISE À JOUR DU STOCK
-    ========================= */
-
-    await Promise.all(
-      products.map(({ product, quantity }) =>
-        prisma.product.update({
+    const order = await prisma.$transaction(async (tx) => {
+      for (const { product, quantity } of products) {
+        const result = await tx.product.updateMany({
           where: {
             id: product.id,
+            stock: { gte: quantity },
           },
           data: {
-            stock: {
-              decrement: quantity,
-            },
+            stock: { decrement: quantity },
           },
-        })
-      )
-    );
+        });
+
+        if (result.count === 0) {
+          throw new InsufficientStockError(product.name);
+        }
+      }
+
+      return tx.order.create({
+        data: {
+          orderNumber,
+
+          customerId,
+
+          subtotal,
+          shipping,
+          total,
+
+          status: "PENDING",
+          paymentStatus: "PENDING",
+
+          paymentMethod: (paymentMethod as PaymentMethod) || "MTN_MONEY",
+
+          items: {
+            create: products.map(({ product, quantity }) => ({
+              productId: product.id,
+              name: product.name,
+              price: product.price,
+              quantity,
+              total: product.price * quantity,
+              downloadUrl: product.downloadUrl || null,
+            })),
+          },
+        },
+
+        include: {
+          items: true,
+          customer: true,
+        },
+      });
+    });
 
     /* =========================
        RÉPONSE
@@ -283,7 +296,7 @@ export async function POST(request: Request) {
             ? error.message
             : "Une erreur est survenue lors de la création de la commande.",
       },
-      { status: 500 }
+      { status: error instanceof InsufficientStockError ? 409 : 500 }
     );
   }
 }
