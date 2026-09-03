@@ -10,6 +10,9 @@ import { prisma } from "@/lib/prisma";
 const GOOGLE_LINK_COOKIE = "kobas_google_link";
 const GOOGLE_LINK_MAX_AGE = 10 * 60; // 10 minutes
 
+const MAX_ATTEMPTS = 5;
+const BLOCK_DURATION_MINUTES = 15;
+
 function createLinkSignature(customerId: string) {
   const secret = process.env.AUTH_SECRET;
 
@@ -58,6 +61,74 @@ function verifyLinkCookieValue(value: string) {
   return isValid ? customerId : null;
 }
 
+function getClientIp(request: Request | undefined): string {
+  if (!request) return "unknown";
+
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    return forwardedFor.split(",")[0].trim();
+  }
+
+  return "unknown";
+}
+
+async function checkAndRecordAttempt(
+  ip: string,
+  success: boolean
+): Promise<{ blocked: boolean; remainingMinutes?: number }> {
+  const existing = await prisma.loginAttempt.findUnique({
+    where: { ip },
+  });
+
+  const now = new Date();
+
+  if (existing?.blockedUntil && existing.blockedUntil > now) {
+    const remainingMs = existing.blockedUntil.getTime() - now.getTime();
+    return {
+      blocked: true,
+      remainingMinutes: Math.ceil(remainingMs / 60000),
+    };
+  }
+
+  if (success) {
+    if (existing) {
+      await prisma.loginAttempt.update({
+        where: { ip },
+        data: { attempts: 0, blockedUntil: null },
+      });
+    }
+    return { blocked: false };
+  }
+
+  const wasBlockedAndExpired =
+    existing?.blockedUntil && existing.blockedUntil <= now;
+
+  const newAttempts = wasBlockedAndExpired
+    ? 1
+    : (existing?.attempts || 0) + 1;
+
+  const shouldBlock = newAttempts >= MAX_ATTEMPTS;
+
+  await prisma.loginAttempt.upsert({
+    where: { ip },
+    create: {
+      ip,
+      attempts: newAttempts,
+      blockedUntil: shouldBlock
+        ? new Date(now.getTime() + BLOCK_DURATION_MINUTES * 60000)
+        : null,
+    },
+    update: {
+      attempts: newAttempts,
+      blockedUntil: shouldBlock
+        ? new Date(now.getTime() + BLOCK_DURATION_MINUTES * 60000)
+        : null,
+    },
+  });
+
+  return { blocked: false };
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
@@ -75,7 +146,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
       },
 
-      async authorize(credentials) {
+      async authorize(credentials, request) {
+        const ip = getClientIp(request as Request | undefined);
+
+        const attemptCheck = await checkAndRecordAttempt(ip, false);
+
+        if (attemptCheck.blocked) {
+          throw new Error(
+            `Trop de tentatives échouées. Réessayez dans ${attemptCheck.remainingMinutes} minute(s).`
+          );
+        }
+
         const adminEmail = process.env.ADMIN_EMAIL;
         const adminPassword = process.env.ADMIN_PASSWORD;
 
@@ -91,6 +172,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           credentials?.email === adminEmail &&
           credentials?.password === adminPassword
         ) {
+          await checkAndRecordAttempt(ip, true);
+
           return {
             id: "admin",
             name: "Kobas Tech",
