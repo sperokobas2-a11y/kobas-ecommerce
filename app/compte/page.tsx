@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn, signOut, useSession } from "next-auth/react";
-
+import { useSession, signIn, signOut } from "next-auth/react";
 import {
   CheckCircle2,
   ClipboardList,
@@ -23,6 +22,8 @@ import {
   XCircle,
 } from "lucide-react";
 
+import Header from "@/components/Header";
+
 type Customer = {
   id: string;
   firstName: string;
@@ -36,51 +37,71 @@ type Customer = {
   hasPassword: boolean;
 };
 
+type OrderItem = {
+  id: string;
+  name: string;
+  quantity: number;
+  total: number;
+  downloadUrl: string | null;
+};
+
 type Order = {
   id: string;
-  status: string;
+  orderNumber: string;
+  items: OrderItem[];
   total: number;
+  status: string;
+  paymentStatus: string;
   createdAt: string;
-  items?: {
-    id: string;
-    name: string;
-    quantity: number;
-    price: number;
-  }[];
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  PENDING: "En attente",
+  CONFIRMED: "Confirmée",
+  PROCESSING: "En préparation",
+  SHIPPED: "Expédiée",
+  DELIVERED: "Livrée",
+  CANCELLED: "Annulée",
 };
 
 export default function ComptePage() {
   const router = useRouter();
   const { status } = useSession();
 
+  const [tab, setTab] = useState<"profil" | "commandes">("profil");
+
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
 
   const [loading, setLoading] = useState(true);
-  const [savingProfile, setSavingProfile] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
+  const [connectingGoogle, setConnectingGoogle] = useState(false);
+  const [disconnectingGoogle, setDisconnectingGoogle] = useState(false);
+  const [googleError, setGoogleError] = useState("");
+  const [googleSuccess, setGoogleSuccess] = useState("");
 
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
 
-  const [showCurrentPassword, setShowCurrentPassword] =
-    useState(false);
-  const [showNewPassword, setShowNewPassword] =
-    useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
-  const [changingPassword, setChangingPassword] =
-    useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
 
-  const [connectingGoogle, setConnectingGoogle] =
-    useState(false);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    whatsapp: "",
+    address: "",
+    city: "",
+  });
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -93,111 +114,226 @@ export default function ComptePage() {
       return;
     }
 
-    async function loadAccount() {
+    let cancelled = false;
+
+    async function loadData() {
       try {
         setLoading(true);
+        setError("");
 
-        const [customerResponse, ordersResponse] =
-          await Promise.all([
-            fetch("/api/customers/me"),
-            fetch("/api/customers/me/orders"),
-          ]);
+        const [profileResponse, ordersResponse] = await Promise.all([
+          fetch("/api/customers/me", {
+            cache: "no-store",
+          }),
+          fetch("/api/customers/me/orders", {
+            cache: "no-store",
+          }),
+        ]);
 
-        if (!customerResponse.ok) {
+        const profileData = await profileResponse.json();
+        const ordersData = await ordersResponse.json();
+
+        if (!profileResponse.ok) {
           throw new Error(
-            "Impossible de charger le profil."
+            profileData.error || "Impossible de charger le profil."
           );
         }
 
-        const customerData =
-          await customerResponse.json();
-
-        setCustomer(customerData.customer);
-
-        setFirstName(customerData.customer.firstName || "");
-        setLastName(customerData.customer.lastName || "");
-        setWhatsapp(customerData.customer.whatsapp || "");
-        setAddress(customerData.customer.address || "");
-        setCity(customerData.customer.city || "");
-
-        if (ordersResponse.ok) {
-          const ordersData = await ordersResponse.json();
-
-          setOrders(ordersData.orders || []);
+        if (!ordersResponse.ok) {
+          throw new Error(
+            ordersData.error || "Impossible de charger les commandes."
+          );
         }
-      } catch (error) {
-        console.error("Chargement du compte:", error);
+
+        if (cancelled) {
+          return;
+        }
+
+        const profile = profileData.customer;
+
+        setCustomer(profile);
+
+        setFormData({
+          firstName: profile.firstName || "",
+          lastName: profile.lastName || "",
+          whatsapp: profile.whatsapp || "",
+          address: profile.address || "",
+          city: profile.city || "",
+        });
+
+        setOrders(ordersData.orders || []);
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Une erreur est survenue."
+        );
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
-    loadAccount();
+    loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [status]);
 
-  async function handleSaveProfile(
-    event: React.FormEvent<HTMLFormElement>
-  ) {
-    event.preventDefault();
-
+  async function handleSave() {
     try {
-      setSavingProfile(true);
+      setSaving(true);
+      setError("");
+      setSuccess(false);
+
+      const response = await fetch("/api/customers/me", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Impossible de mettre à jour le profil."
+        );
+      }
+
+      setCustomer(data.customer);
+      setSuccess(true);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Une erreur est survenue."
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleConnectGoogle() {
+    try {
+      setConnectingGoogle(true);
+      setGoogleError("");
+      setGoogleSuccess("");
 
       const response = await fetch(
-        "/api/customers/me",
+        "/api/customers/me/google/link",
         {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            firstName,
-            lastName,
-            whatsapp,
-            address,
-            city,
-          }),
+          method: "POST",
         }
       );
 
       const data = await response.json();
 
       if (!response.ok) {
-        alert(
+        throw new Error(
           data.error ||
-            "Impossible de mettre à jour le profil."
+            "Impossible de préparer la liaison Google."
         );
-        return;
       }
 
-      setCustomer(data.customer);
+      await signIn("google", {
+        callbackUrl: "/compte",
+      });
+    } catch (err) {
+      console.error("Liaison Google:", err);
 
-      alert("Profil mis à jour avec succès.");
-    } catch (error) {
-      console.error("Mise à jour du profil:", error);
-
-      alert(
-        "Une erreur est survenue lors de la mise à jour du profil."
+      setGoogleError(
+        err instanceof Error
+          ? err.message
+          : "Impossible de connecter Google."
       );
-    } finally {
-      setSavingProfile(false);
+
+      setConnectingGoogle(false);
     }
   }
 
-  async function handleChangePassword(
-    event: React.FormEvent<HTMLFormElement>
-  ) {
-    event.preventDefault();
+  async function handleDisconnectGoogle() {
+    if (!customer?.hasGoogleAccount) {
+      return;
+    }
 
-    if (newPassword.length < 8) {
-      alert(
+    if (!customer.hasPassword) {
+      setGoogleError(
+        "Définissez d'abord un mot de passe avant de déconnecter Google."
+      );
+      return;
+    }
+
+    try {
+      setDisconnectingGoogle(true);
+      setGoogleError("");
+      setGoogleSuccess("");
+
+      const response = await fetch(
+        "/api/customers/me/google/unlink",
+        {
+          method: "POST",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            "Impossible de déconnecter le compte Google."
+        );
+      }
+
+      setCustomer((previous) =>
+        previous
+          ? {
+              ...previous,
+              hasGoogleAccount: false,
+            }
+          : previous
+      );
+
+      setGoogleSuccess(
+        "Compte Google déconnecté avec succès."
+      );
+    } catch (err) {
+      console.error("Déconnexion Google:", err);
+
+      setGoogleError(
+        err instanceof Error
+          ? err.message
+          : "Impossible de déconnecter Google."
+      );
+    } finally {
+      setDisconnectingGoogle(false);
+    }
+  }
+
+  async function handleChangePassword() {
+    setPasswordError("");
+    setPasswordSuccess("");
+
+    if (passwordData.newPassword.length < 8) {
+      setPasswordError(
         "Le nouveau mot de passe doit contenir au moins 8 caractères."
       );
       return;
     }
 
-    if (newPassword !== confirmPassword) {
-      alert("Les deux nouveaux mots de passe ne correspondent pas.");
+    if (
+      passwordData.newPassword !== passwordData.confirmPassword
+    ) {
+      setPasswordError(
+        "Les deux nouveaux mots de passe ne correspondent pas."
+      );
       return;
     }
 
@@ -211,26 +347,29 @@ export default function ComptePage() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            currentPassword,
-            newPassword,
-          }),
+          body: JSON.stringify(passwordData),
         }
       );
 
       const data = await response.json();
 
       if (!response.ok) {
-        alert(
+        throw new Error(
           data.error ||
             "Impossible de modifier le mot de passe."
         );
-        return;
       }
 
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      setPasswordSuccess(
+        data.message ||
+          "Mot de passe modifié avec succès."
+      );
 
       setCustomer((previous) =>
         previous
@@ -240,811 +379,662 @@ export default function ComptePage() {
             }
           : previous
       );
-
-      alert("Mot de passe modifié avec succès.");
-    } catch (error) {
-      console.error(
-        "Modification du mot de passe:",
-        error
-      );
-
-      alert(
-        "Une erreur est survenue lors de la modification du mot de passe."
+    } catch (err) {
+      setPasswordError(
+        err instanceof Error
+          ? err.message
+          : "Impossible de modifier le mot de passe."
       );
     } finally {
       setChangingPassword(false);
     }
   }
 
-  async function handleConnectGoogle() {
-    try {
-      setConnectingGoogle(true);
-
-      const response = await fetch(
-        "/api/customers/me/google/link",
-        {
-          method: "POST",
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(
-          data.error ||
-            "Impossible de préparer la connexion Google."
-        );
-
-        setConnectingGoogle(false);
-        return;
-      }
-
-      await signIn("google", {
-        callbackUrl: "/compte",
-      });
-    } catch (error) {
-      console.error("Liaison Google:", error);
-
-      alert(
-        "Une erreur est survenue lors de la liaison du compte Google."
-      );
-
-      setConnectingGoogle(false);
-    }
-  }
-
-  async function handleDisconnectGoogle() {
-    if (!customer?.hasGoogleAccount) {
-      return;
-    }
-
-    if (!customer.hasPassword) {
-      alert(
-        "Définissez d'abord un mot de passe avant de déconnecter votre compte Google."
-      );
-      return;
-    }
-
-    const confirmed = window.confirm(
-      "Voulez-vous vraiment déconnecter votre compte Google ?\n\nVous pourrez toujours vous connecter avec votre adresse e-mail et votre mot de passe."
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      setConnectingGoogle(true);
-
-      const response = await fetch(
-        "/api/customers/me/google/unlink",
-        {
-          method: "POST",
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(
-          data.error ||
-            "Impossible de déconnecter le compte Google."
-        );
-        return;
-      }
-
-      const customerResponse = await fetch(
-        "/api/customers/me"
-      );
-
-      if (customerResponse.ok) {
-        const customerData =
-          await customerResponse.json();
-
-        setCustomer(customerData.customer);
-      }
-
-      alert("Compte Google déconnecté avec succès.");
-    } catch (error) {
-      console.error(
-        "Déconnexion Google:",
-        error
-      );
-
-      alert(
-        "Une erreur est survenue lors de la déconnexion du compte Google."
-      );
-    } finally {
-      setConnectingGoogle(false);
-    }
-  }
-
-  async function handleLogout() {
-    await signOut({
-      callbackUrl: "/",
-    });
-  }
-
-  if (
-    status === "loading" ||
-    loading
-  ) {
+  if (status === "loading" || loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="flex items-center gap-3 text-slate-600">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Chargement de votre compte...</span>
+      <main className="min-h-screen bg-[#08090d] text-white">
+        <Header />
+
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
         </div>
       </main>
     );
   }
 
   if (!customer) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
-        <div className="max-w-md rounded-2xl bg-white p-8 text-center shadow-sm">
-          <XCircle className="mx-auto mb-4 h-12 w-12 text-red-500" />
-
-          <h1 className="text-xl font-bold text-slate-900">
-            Impossible de charger votre compte
-          </h1>
-
-          <p className="mt-2 text-sm text-slate-600">
-            Veuillez vous reconnecter puis réessayer.
-          </p>
-
-          <button
-            type="button"
-            onClick={() => router.push("/connexion")}
-            className="mt-6 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-          >
-            Se connecter
-          </button>
-        </div>
-      </main>
-    );
+    return null;
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* En-tête */}
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <main className="min-h-screen bg-[#08090d] text-white">
+      <Header />
+
+      <section className="mx-auto max-w-5xl px-5 py-12 lg:px-8">
+        {/* HEADER COMPTE */}
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-blue-600">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-400">
               Kobas Tech
             </p>
 
-            <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">
+            <h1 className="mt-2 text-4xl font-black tracking-tight">
               Mon compte
             </h1>
 
-            <p className="mt-2 text-sm text-slate-600">
-              Gérez votre profil, votre sécurité et vos commandes.
+            <p className="mt-2 text-sm text-zinc-500">
+              Bonjour {customer.firstName}, bienvenue sur votre espace.
             </p>
           </div>
 
           <button
             type="button"
-            onClick={handleLogout}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100"
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-zinc-300 transition hover:bg-red-500/10 hover:text-red-400"
           >
             <LogOut className="h-4 w-4" />
-            Se déconnecter
+            Déconnexion
           </button>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Colonne principale */}
-          <div className="space-y-6 lg:col-span-2">
-            {/* Profil */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                  <User className="h-5 w-5" />
-                </div>
+        {/* ONGLETS */}
+        <div className="mt-8 flex gap-2 border-b border-white/10">
+          <button
+            type="button"
+            onClick={() => setTab("profil")}
+            className={
+              "flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition " +
+              (tab === "profil"
+                ? "border-blue-400 text-white"
+                : "border-transparent text-zinc-500 hover:text-white")
+            }
+          >
+            <User className="h-4 w-4" />
+            Profil
+          </button>
 
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">
-                    Informations personnelles
-                  </h2>
+          <button
+            type="button"
+            onClick={() => setTab("commandes")}
+            className={
+              "flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition " +
+              (tab === "commandes"
+                ? "border-blue-400 text-white"
+                : "border-transparent text-zinc-500 hover:text-white")
+            }
+          >
+            <ClipboardList className="h-4 w-4" />
+            Mes commandes
 
-                  <p className="text-sm text-slate-500">
-                    Modifiez vos informations de contact.
-                  </p>
-                </div>
+            {orders.length > 0 && (
+              <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] text-blue-400">
+                {orders.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* PROFIL */}
+        {tab === "profil" && (
+          <div className="mt-8 max-w-2xl space-y-6">
+            {/* INFORMATIONS PERSONNELLES */}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-6 sm:p-8">
+              <div className="mb-6 flex items-center gap-2 text-sm text-zinc-500">
+                <Mail className="h-4 w-4" />
+
+                {customer.email}
+
+                <span className="text-xs text-zinc-700">
+                  (non modifiable)
+                </span>
               </div>
 
-              <form
-                onSubmit={handleSaveProfile}
-                className="space-y-5"
-              >
+              <div className="space-y-5">
+                {/* PRÉNOM / NOM */}
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                    <label className="mb-2 block text-xs font-semibold text-zinc-400">
                       Prénom
                     </label>
 
                     <input
                       type="text"
-                      value={firstName}
-                      onChange={(event) =>
-                        setFirstName(event.target.value)
+                      value={formData.firstName}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          firstName: e.target.value,
+                        })
                       }
-                      required
-                      className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm outline-none transition focus:border-blue-500"
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                    <label className="mb-2 block text-xs font-semibold text-zinc-400">
                       Nom
                     </label>
 
                     <input
                       type="text"
-                      value={lastName}
-                      onChange={(event) =>
-                        setLastName(event.target.value)
+                      value={formData.lastName}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          lastName: e.target.value,
+                        })
                       }
-                      required
-                      className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm outline-none transition focus:border-blue-500"
                     />
                   </div>
                 </div>
 
+                {/* WHATSAPP */}
                 <div>
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-                    <Mail className="h-4 w-4" />
-                    Adresse e-mail
+                  <label className="mb-2 block text-xs font-semibold text-zinc-400">
+                    Numéro WhatsApp
                   </label>
 
-                  <input
-                    type="email"
-                    value={customer.email}
-                    disabled
-                    className="w-full cursor-not-allowed rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500"
-                  />
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" />
+
+                    <input
+                      type="tel"
+                      value={formData.whatsapp}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          whatsapp: e.target.value,
+                        })
+                      }
+                      className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] pl-11 pr-4 text-sm outline-none transition focus:border-blue-500"
+                    />
+                  </div>
                 </div>
 
+                {/* ADRESSE */}
                 <div>
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-                    <Phone className="h-4 w-4" />
-                    WhatsApp
-                  </label>
-
-                  <input
-                    type="tel"
-                    value={whatsapp}
-                    onChange={(event) =>
-                      setWhatsapp(event.target.value)
-                    }
-                    required
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-                    <MapPin className="h-4 w-4" />
+                  <label className="mb-2 block text-xs font-semibold text-zinc-400">
                     Adresse
                   </label>
 
-                  <input
-                    type="text"
-                    value={address}
-                    onChange={(event) =>
-                      setAddress(event.target.value)
-                    }
-                    placeholder="Votre adresse"
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  />
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" />
+
+                    <input
+                      type="text"
+                      value={formData.address}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          address: e.target.value,
+                        })
+                      }
+                      placeholder="Quartier, rue..."
+                      className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] pl-11 pr-4 text-sm outline-none transition placeholder:text-zinc-700 focus:border-blue-500"
+                    />
+                  </div>
                 </div>
 
+                {/* VILLE */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                  <label className="mb-2 block text-xs font-semibold text-zinc-400">
                     Ville
                   </label>
 
                   <input
                     type="text"
-                    value={city}
-                    onChange={(event) =>
-                      setCity(event.target.value)
+                    value={formData.city}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        city: e.target.value,
+                      })
                     }
-                    placeholder="Votre ville"
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    placeholder="Cotonou, Porto-Novo..."
+                    className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm outline-none transition placeholder:text-zinc-700 focus:border-blue-500"
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={savingProfile}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {savingProfile ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4" />
-                  )}
-
-                  {savingProfile
-                    ? "Enregistrement..."
-                    : "Enregistrer les modifications"}
-                </button>
-              </form>
-            </section>
-
-            {/* Sécurité */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-6 flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                  <ShieldCheck className="h-5 w-5" />
-                </div>
-
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">
-                    Sécurité
-                  </h2>
-
-                  <p className="text-sm text-slate-500">
-                    Gérez les méthodes d'accès à votre compte.
-                  </p>
-                </div>
-              </div>
-
-              {/* Mot de passe */}
-              <div className="rounded-2xl border border-slate-200 p-5">
-                <div className="mb-5 flex items-start gap-3">
-                  <KeyRound className="mt-0.5 h-5 w-5 text-slate-600" />
-
-                  <div>
-                    <h3 className="font-semibold text-slate-900">
-                      {customer.hasPassword
-                        ? "Modifier mon mot de passe"
-                        : "Créer mon mot de passe"}
-                    </h3>
-
-                    <p className="mt-1 text-sm text-slate-500">
-                      {customer.hasPassword
-                        ? "Utilisez un mot de passe unique et difficile à deviner."
-                        : "Ajoutez un mot de passe pour disposer d'une méthode de connexion supplémentaire."}
+                {/* ERREUR */}
+                {error && (
+                  <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+                    <p className="text-sm text-red-400">
+                      {error}
                     </p>
                   </div>
+                )}
+
+                {/* SUCCÈS */}
+                {success && (
+                  <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+
+                    <p className="text-sm text-emerald-400">
+                      Profil mis à jour avec succès.
+                    </p>
+                  </div>
+                )}
+
+                {/* SAUVEGARDE */}
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-black transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Enregistrer les modifications
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* SÉCURITÉ */}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-6 sm:p-8">
+              <div className="mb-6">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-blue-400" />
+
+                  <h2 className="text-lg font-bold">
+                    Sécurité
+                  </h2>
                 </div>
 
-                <form
-                  onSubmit={handleChangePassword}
-                  className="space-y-4"
-                >
+                <p className="mt-1 text-sm text-zinc-500">
+                  Gérez les méthodes de connexion associées à votre compte.
+                </p>
+              </div>
+
+              {/* GOOGLE */}
+              <div className="border-b border-white/10 pb-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-sm font-bold text-black">
+                        G
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-semibold">
+                          Compte Google
+                        </p>
+
+                        {customer.hasGoogleAccount ? (
+                          <p className="mt-0.5 text-xs text-emerald-400">
+                            Connecté à votre compte Kobas Tech
+                          </p>
+                        ) : (
+                          <p className="mt-0.5 text-xs text-zinc-600">
+                            Aucun compte Google connecté
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {!customer.hasGoogleAccount ? (
+                    <button
+                      type="button"
+                      onClick={handleConnectGoogle}
+                      disabled={connectingGoogle}
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 text-xs font-bold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {connectingGoogle ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Connexion...
+                        </>
+                      ) : (
+                        "Connecter Google"
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleDisconnectGoogle}
+                      disabled={
+                        disconnectingGoogle ||
+                        !customer.hasPassword
+                      }
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 text-xs font-bold text-red-400 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                      title={
+                        !customer.hasPassword
+                          ? "Définissez d'abord un mot de passe"
+                          : undefined
+                      }
+                    >
+                      {disconnectingGoogle ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Déconnexion...
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="h-4 w-4" />
+                          Déconnecter Google
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {!customer.hasGoogleAccount && (
+                  <p className="mt-3 text-xs leading-5 text-zinc-600">
+                    Vous pourrez utiliser votre compte Google pour vous
+                    connecter rapidement à Kobas Tech.
+                  </p>
+                )}
+
+                {customer.hasGoogleAccount &&
+                  !customer.hasPassword && (
+                    <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3">
+                      <p className="text-xs leading-5 text-amber-400">
+                        Définissez un mot de passe avant de pouvoir
+                        déconnecter Google. Cela permet de conserver une
+                        méthode de connexion à votre compte.
+                      </p>
+                    </div>
+                  )}
+
+                {googleError && (
+                  <div className="mt-4 flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+                    <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+
+                    <p className="text-xs leading-5 text-red-400">
+                      {googleError}
+                    </p>
+                  </div>
+                )}
+
+                {googleSuccess && (
+                  <div className="mt-4 flex items-start gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+
+                    <p className="text-xs leading-5 text-emerald-400">
+                      {googleSuccess}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* MOT DE PASSE */}
+              <div className="pt-6">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="h-4 w-4 text-zinc-500" />
+
+                  <h3 className="text-sm font-semibold">
+                    Mot de passe
+                  </h3>
+                </div>
+
+                <p className="mt-1 text-xs text-zinc-600">
+                  {customer.hasPassword
+                    ? "Modifiez votre mot de passe pour sécuriser votre compte."
+                    : "Ajoutez un mot de passe pour disposer d'une méthode de connexion supplémentaire."}
+                </p>
+
+                <div className="mt-5 space-y-4">
+                  {/* ANCIEN MOT DE PASSE */}
                   {customer.hasPassword && (
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-700">
-                        Ancien mot de passe
+                      <label className="mb-2 block text-xs font-semibold text-zinc-400">
+                        Mot de passe actuel
                       </label>
 
                       <div className="relative">
                         <input
-                          type={
-                            showCurrentPassword
-                              ? "text"
-                              : "password"
+                          type={showPassword ? "text" : "password"}
+                          value={passwordData.currentPassword}
+                          onChange={(e) =>
+                            setPasswordData({
+                              ...passwordData,
+                              currentPassword: e.target.value,
+                            })
                           }
-                          value={currentPassword}
-                          onChange={(event) =>
-                            setCurrentPassword(
-                              event.target.value
-                            )
-                          }
-                          required
-                          className="w-full rounded-xl border border-slate-200 px-4 py-3 pr-12 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                          className="h-11 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 pr-11 text-sm outline-none transition focus:border-blue-500"
                         />
 
                         <button
                           type="button"
                           onClick={() =>
-                            setShowCurrentPassword(
-                              !showCurrentPassword
-                            )
+                            setShowPassword(!showPassword)
                           }
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 transition hover:text-zinc-300"
                         >
-                          {showCurrentPassword ? (
-                            <EyeOff className="h-5 w-5" />
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
                           ) : (
-                            <Eye className="h-5 w-5" />
+                            <Eye className="h-4 w-4" />
                           )}
                         </button>
                       </div>
                     </div>
                   )}
 
+                  {/* NOUVEAU MOT DE PASSE */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Nouveau mot de passe
+                    <label className="mb-2 block text-xs font-semibold text-zinc-400">
+                      {customer.hasPassword
+                        ? "Nouveau mot de passe"
+                        : "Créer un mot de passe"}
                     </label>
 
-                    <div className="relative">
-                      <input
-                        type={
-                          showNewPassword
-                            ? "text"
-                            : "password"
-                        }
-                        value={newPassword}
-                        onChange={(event) =>
-                          setNewPassword(
-                            event.target.value
-                          )
-                        }
-                        minLength={8}
-                        required
-                        className="w-full rounded-xl border border-slate-200 px-4 py-3 pr-12 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowNewPassword(
-                            !showNewPassword
-                          )
-                        }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
-                      >
-                        {showNewPassword ? (
-                          <EyeOff className="h-5 w-5" />
-                        ) : (
-                          <Eye className="h-5 w-5" />
-                        )}
-                      </button>
-                    </div>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={passwordData.newPassword}
+                      onChange={(e) =>
+                        setPasswordData({
+                          ...passwordData,
+                          newPassword: e.target.value,
+                        })
+                      }
+                      placeholder="Minimum 8 caractères"
+                      className="h-11 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm outline-none transition placeholder:text-zinc-700 focus:border-blue-500"
+                    />
                   </div>
 
+                  {/* CONFIRMATION */}
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Confirmer le nouveau mot de passe
+                    <label className="mb-2 block text-xs font-semibold text-zinc-400">
+                      Confirmer le mot de passe
                     </label>
 
-                    <div className="relative">
-                      <input
-                        type={
-                          showConfirmPassword
-                            ? "text"
-                            : "password"
-                        }
-                        value={confirmPassword}
-                        onChange={(event) =>
-                          setConfirmPassword(
-                            event.target.value
-                          )
-                        }
-                        minLength={8}
-                        required
-                        className="w-full rounded-xl border border-slate-200 px-4 py-3 pr-12 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowConfirmPassword(
-                            !showConfirmPassword
-                          )
-                        }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="h-5 w-5" />
-                        ) : (
-                          <Eye className="h-5 w-5" />
-                        )}
-                      </button>
-                    </div>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={passwordData.confirmPassword}
+                      onChange={(e) =>
+                        setPasswordData({
+                          ...passwordData,
+                          confirmPassword: e.target.value,
+                        })
+                      }
+                      className="h-11 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm outline-none transition focus:border-blue-500"
+                    />
                   </div>
+
+                  {passwordError && (
+                    <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+                      <p className="text-xs leading-5 text-red-400">
+                        {passwordError}
+                      </p>
+                    </div>
+                  )}
+
+                  {passwordSuccess && (
+                    <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+
+                      <p className="text-xs leading-5 text-emerald-400">
+                        {passwordSuccess}
+                      </p>
+                    </div>
+                  )}
 
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleChangePassword}
                     disabled={changingPassword}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="flex h-11 items-center justify-center gap-2 rounded-xl bg-white px-5 text-xs font-bold text-black transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {changingPassword ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Enregistrement...
+                      </>
                     ) : (
-                      <KeyRound className="h-4 w-4" />
+                      <>
+                        <KeyRound className="h-4 w-4" />
+                        {customer.hasPassword
+                          ? "Modifier le mot de passe"
+                          : "Créer le mot de passe"}
+                      </>
                     )}
-
-                    {changingPassword
-                      ? "Enregistrement..."
-                      : customer.hasPassword
-                        ? "Modifier le mot de passe"
-                        : "Créer mon mot de passe"}
                   </button>
-                </form>
-              </div>
-
-              {/* Google */}
-              <div className="mt-5 rounded-2xl border border-slate-200 p-5">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100">
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="h-5 w-5"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fill="#4285F4"
-                        d="M21.35 12.27c0-.79-.07-1.55-.22-2.27H12v4.3h5.22a4.46 4.46 0 0 1-1.94 2.93v2.44h3.14c1.84-1.69 2.93-4.18 2.93-7.4Z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M12 21.5c2.63 0 4.84-.87 6.45-2.36l-3.14-2.44c-.87.58-1.98.93-3.31.93-2.54 0-4.69-1.72-5.46-4.03H3.29v2.52A9.74 9.74 0 0 0 12 21.5Z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M6.54 13.6A5.86 5.86 0 0 1 6.23 12c0-.56.11-1.1.31-1.6V7.88H3.29A9.75 9.75 0 0 0 2.25 12c0 1.57.38 3.05 1.04 4.12l3.25-2.52Z"
-                      />
-                      <path
-                        fill="#EA4335"
-                        d="M12 6.38c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.83 3.45 14.63 2.5 12 2.5a9.74 9.74 0 0 0-8.71 5.38l3.25 2.52C7.31 8.1 9.46 6.38 12 6.38Z"
-                      />
-                    </svg>
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-slate-900">
-                      Compte Google
-                    </h3>
-
-                    {customer.hasGoogleAccount ? (
-                      <>
-                        <div className="mt-2 flex items-center gap-2 text-sm font-medium text-emerald-600">
-                          <CheckCircle2 className="h-4 w-4" />
-                          Compte Google connecté
-                        </div>
-
-                        <p className="mt-2 break-all text-sm text-slate-500">
-                          {customer.email}
-                        </p>
-
-                        {customer.hasPassword ? (
-                          <p className="mt-3 text-sm text-slate-500">
-                            Votre compte possède un mot de passe
-                            et un compte Google. Vous pouvez
-                            utiliser l'une ou l'autre méthode
-                            pour vous connecter.
-                          </p>
-                        ) : (
-                          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                            <p className="text-sm font-medium text-amber-800">
-                              Ajoutez un mot de passe avant de
-                              déconnecter Google.
-                            </p>
-
-                            <p className="mt-1 text-sm text-amber-700">
-                              Cela garantit que vous conservez
-                              un moyen d'accéder à votre compte.
-                            </p>
-                          </div>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={handleDisconnectGoogle}
-                          disabled={
-                            connectingGoogle ||
-                            !customer.hasPassword
-                          }
-                          className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {connectingGoogle ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <LogOut className="h-4 w-4" />
-                          )}
-
-                          Déconnecter Google
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <div className="mt-2 flex items-center gap-2 text-sm font-medium text-slate-600">
-                          <XCircle className="h-4 w-4" />
-                          Aucun compte Google connecté
-                        </div>
-
-                        <p className="mt-2 text-sm text-slate-500">
-                          Connectez votre compte Google pour
-                          disposer d'une méthode de connexion
-                          supplémentaire.
-                        </p>
-
-                        <button
-                          type="button"
-                          onClick={handleConnectGoogle}
-                          disabled={connectingGoogle}
-                          className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {connectingGoogle ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <svg
-                              viewBox="0 0 24 24"
-                              className="h-4 w-4"
-                              aria-hidden="true"
-                            >
-                              <path
-                                fill="#4285F4"
-                                d="M21.35 12.27c0-.79-.07-1.55-.22-2.27H12v4.3h5.22a4.46 4.46 0 0 1-1.94 2.93v2.44h3.14c1.84-1.69 2.93-4.18 2.93-7.4Z"
-                              />
-                              <path
-                                fill="#34A853"
-                                d="M12 21.5c2.63 0 4.84-.87 6.45-2.36l-3.14-2.44c-.87.58-1.98.93-3.31.93-2.54 0-4.69-1.72-5.46-4.03H3.29v2.52A9.74 9.74 0 0 0 12 21.5Z"
-                              />
-                              <path
-                                fill="#FBBC05"
-                                d="M6.54 13.6A5.86 5.86 0 0 1 6.23 12c0-.56.11-1.1.31-1.6V7.88H3.29A9.75 9.75 0 0 0 2.25 12c0 1.57.38 3.05 1.04 4.12l3.25-2.52Z"
-                              />
-                              <path
-                                fill="#EA4335"
-                                d="M12 6.38c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.83 3.45 14.63 2.5 12 2.5a9.74 9.74 0 0 0-8.71 5.38l3.25 2.52C7.31 8.1 9.46 6.38 12 6.38Z"
-                              />
-                            </svg>
-                          )}
-
-                          {connectingGoogle
-                            ? "Connexion..."
-                            : "Connecter Google"}
-                        </button>
-                      </>
-                    )}
-                  </div>
                 </div>
               </div>
-            </section>
+            </div>
           </div>
+        )}
 
-          {/* Colonne droite */}
-          <div className="space-y-6">
-            {/* Résumé */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-5 flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                  <User className="h-5 w-5" />
-                </div>
+        {/* COMMANDES */}
+        {tab === "commandes" && (
+          <div className="mt-8">
+            {orders.length === 0 ? (
+              <div className="rounded-2xl border border-white/10 bg-white/[0.025] px-6 py-20 text-center">
+                <Package className="mx-auto h-12 w-12 text-zinc-700" />
 
-                <div>
-                  <h2 className="font-bold text-slate-900">
-                    Mon profil
-                  </h2>
+                <h2 className="mt-5 text-xl font-bold">
+                  Aucune commande pour le moment
+                </h2>
 
-                  <p className="text-sm text-slate-500">
-                    Résumé du compte
-                  </p>
-                </div>
+                <p className="mx-auto mt-2 max-w-md text-sm text-zinc-600">
+                  Vos commandes apparaîtront ici une fois passées.
+                </p>
               </div>
-
+            ) : (
               <div className="space-y-4">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                    Nom
-                  </p>
+                {orders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="rounded-2xl border border-white/10 bg-white/[0.025] p-6"
+                  >
+                    {/* INFOS COMMANDE */}
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-bold">
+                          {order.orderNumber}
+                        </p>
 
-                  <p className="mt-1 font-medium text-slate-800">
-                    {customer.firstName} {customer.lastName}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                    E-mail
-                  </p>
-
-                  <p className="mt-1 break-all text-sm text-slate-700">
-                    {customer.email}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                    WhatsApp
-                  </p>
-
-                  <p className="mt-1 text-sm text-slate-700">
-                    {customer.whatsapp}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                    Localisation
-                  </p>
-
-                  <p className="mt-1 text-sm text-slate-700">
-                    {[customer.city, customer.country]
-                      .filter(Boolean)
-                      .join(", ")}
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            {/* Commandes */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-5 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
-                    <Package className="h-5 w-5" />
-                  </div>
-
-                  <div>
-                    <h2 className="font-bold text-slate-900">
-                      Mes commandes
-                    </h2>
-
-                    <p className="text-sm text-slate-500">
-                      {orders.length} commande
-                      {orders.length > 1 ? "s" : ""}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {orders.length === 0 ? (
-                <div className="rounded-xl bg-slate-50 p-5 text-center">
-                  <ClipboardList className="mx-auto h-8 w-8 text-slate-400" />
-
-                  <p className="mt-3 text-sm font-medium text-slate-700">
-                    Aucune commande pour le moment.
-                  </p>
-
-                  <p className="mt-1 text-xs text-slate-500">
-                    Vos futures commandes apparaîtront ici.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {orders.map((order) => (
-                    <div
-                      key={order.id}
-                      className="rounded-xl border border-slate-200 p-4"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-semibold text-slate-900">
-                            Commande #{order.id}
-                          </p>
-
-                          <p className="mt-1 text-xs text-slate-500">
-                            {new Date(
-                              order.createdAt
-                            ).toLocaleDateString("fr-FR")}
-                          </p>
-                        </div>
-
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                          {order.status}
-                        </span>
+                        <p className="mt-1 text-xs text-zinc-600">
+                          {new Date(
+                            order.createdAt
+                          ).toLocaleDateString("fr-FR", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </p>
                       </div>
 
-                      <div className="mt-4 flex items-center justify-between">
-                        <span className="text-sm text-slate-500">
-                          Total
-                        </span>
+                      <div className="flex items-center gap-2">
+                        <PaymentBadge
+                          status={order.paymentStatus}
+                        />
 
-                        <span className="font-bold text-slate-900">
-                          {Number(order.total).toLocaleString(
-                            "fr-FR"
-                          )}{" "}
-                          FCFA
+                        <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs font-semibold text-zinc-300">
+                          {STATUS_LABELS[order.status] ||
+                            order.status}
                         </span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </section>
+
+                    {/* ARTICLES */}
+                    <div className="mt-4 divide-y divide-white/5 border-t border-white/5">
+                      {order.items.map((item) => (
+                        <div
+                          key={item.id}
+                          className="py-3"
+                        >
+                          <div className="flex items-center justify-between gap-4 text-sm">
+                            <span className="text-zinc-400">
+                              {item.quantity} × {item.name}
+                            </span>
+
+                            <span className="whitespace-nowrap text-zinc-300">
+                              {item.total.toLocaleString(
+                                "fr-FR"
+                              )}{" "}
+                              FCFA
+                            </span>
+                          </div>
+
+                          {/* TÉLÉCHARGEMENT */}
+                          {item.downloadUrl &&
+                            order.paymentStatus === "PAID" ? (
+                            <a
+                              href={item.downloadUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-2 inline-flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition hover:bg-emerald-500/20"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              Télécharger le fichier
+                            </a>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* TOTAL */}
+                    <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
+                      <span className="text-sm text-zinc-500">
+                        Total
+                      </span>
+
+                      <span className="text-lg font-bold">
+                        {order.total.toLocaleString("fr-FR")} FCFA
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-      </div>
+        )}
+      </section>
     </main>
+  );
+}
+
+function PaymentBadge({ status }: { status: string }) {
+  if (status === "PAID") {
+    return (
+      <span className="inline-flex rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+        Payée
+      </span>
+    );
+  }
+
+  if (status === "FAILED") {
+    return (
+      <span className="inline-flex rounded-full bg-red-500/10 px-3 py-1 text-xs font-semibold text-red-400">
+        Échouée
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-400">
+      En attente
+    </span>
   );
 }
