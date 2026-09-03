@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -20,9 +21,7 @@ import BuyNowButton from "@/components/buy-now-button";
 export const dynamic = "force-dynamic";
 
 type ProductPageProps = {
-  params: Promise<{
-    slug: string;
-  }>;
+  params: Promise<{ slug: string }>;
 };
 
 export async function generateMetadata({
@@ -31,9 +30,7 @@ export async function generateMetadata({
   const { slug } = await params;
 
   const product = await prisma.product.findUnique({
-    where: {
-      slug,
-    },
+    where: { slug },
     select: {
       name: true,
       description: true,
@@ -64,7 +61,9 @@ export async function generateMetadata({
 
   return {
     title: product.name + " | Kobas Tech",
+
     description,
+
     keywords: [
       product.name,
       "Kobas Tech",
@@ -73,9 +72,11 @@ export async function generateMetadata({
       "produit numérique",
       "Bénin",
     ],
+
     alternates: {
       canonical: productUrl,
     },
+
     openGraph: {
       title: product.name + " | Kobas Tech",
       description,
@@ -83,6 +84,7 @@ export async function generateMetadata({
       siteName: "Kobas Tech",
       locale: "fr_BJ",
       type: "website",
+
       images: product.images?.[0]
         ? [
             {
@@ -94,6 +96,7 @@ export async function generateMetadata({
           ]
         : [],
     },
+
     twitter: {
       card: "summary_large_image",
       title: product.name + " | Kobas Tech",
@@ -127,24 +130,36 @@ export default async function ProductPage({
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
+
     name: product.name,
+
     description: product.description,
+
     image: product.images,
+
     sku: product.sku || product.id,
+
     brand: {
       "@type": "Brand",
       name: "Kobas Tech",
     },
+
     category: product.category.name,
+
     offers: {
       "@type": "Offer",
+
       url: productUrl,
+
       priceCurrency: "XOF",
+
       price: product.price,
+
       availability:
         product.stock > 0
           ? "https://schema.org/InStock"
           : "https://schema.org/OutOfStock",
+
       itemCondition: "https://schema.org/NewCondition",
     },
   };
@@ -158,218 +173,218 @@ export default async function ProductPage({
         }}
       />
 
-      <main className="min-h-screen bg-[#08090d] text-white">
+      <main className="min-h-screen bg-background">
         {/* HEADER */}
-        <header className="sticky top-0 z-50 border-b border-white/10 bg-[#08090d]/85 backdrop-blur-xl">
-          <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 lg:px-8">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600">
-                <Zap className="h-5 w-5 fill-white" />
-              </div>
-
-              <div>
-                <p className="text-lg font-bold tracking-tight">
-                  KOBAS
-                </p>
-
-                <p className="-mt-1 text-[9px] font-semibold tracking-[0.28em] text-blue-400">
-                  TECH
-                </p>
-              </div>
+        <header className="border-b border-border/50 bg-background/95 backdrop-blur">
+          <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+            <Link
+              href="/"
+              className="text-xl font-bold tracking-tight"
+            >
+              Kobas <span className="text-primary">Tech</span>
             </Link>
 
-            <nav className="hidden items-center gap-8 md:flex">
+            <nav className="hidden items-center gap-6 md:flex">
               <Link
                 href="/"
-                className="text-sm font-medium text-zinc-400 transition hover:text-white"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 Accueil
               </Link>
 
               <Link
                 href="/boutique"
-                className="text-sm font-medium text-white"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 Boutique
               </Link>
 
               <Link
                 href="/categories"
-                className="text-sm font-medium text-zinc-400 transition hover:text-white"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 Catégories
               </Link>
 
               <Link
                 href="/a-propos"
-                className="text-sm font-medium text-zinc-400 transition hover:text-white"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 À propos
+              </Link>
+
+              <Link
+                href="/contact"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Contact
               </Link>
             </nav>
 
             <Link
-              href="/panier"
-              aria-label="Panier"
-              className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-zinc-400 transition hover:bg-white/5 hover:text-white"
+              href="/boutique"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-border transition-colors hover:bg-muted"
+              aria-label="Voir la boutique"
             >
-              <ShoppingCart className="h-4 w-4" />
-
-              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1 text-[9px] font-bold">
-                0
-              </span>
+              <ShoppingCart className="h-5 w-5" />
             </Link>
           </div>
         </header>
 
-        {/* BREADCRUMB */}
-        <div className="border-b border-white/5">
-          <div className="mx-auto flex max-w-7xl items-center gap-2 px-5 py-5 text-xs text-zinc-500 lg:px-8">
-            <Link
-              href="/"
-              className="transition hover:text-white"
-            >
-              Accueil
-            </Link>
-
-            <ChevronRight className="h-3 w-3" />
-
+        {/* CONTENU */}
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          {/* BREADCRUMB */}
+          <div className="mb-8 flex items-center gap-2 text-sm text-muted-foreground">
             <Link
               href="/boutique"
-              className="transition hover:text-white"
+              className="transition-colors hover:text-foreground"
             >
               Boutique
             </Link>
 
-            <ChevronRight className="h-3 w-3" />
+            <ChevronRight className="h-4 w-4" />
 
-            <span className="truncate text-zinc-300">
+            <Link
+              href={
+                "/boutique?categorie=" + product.category.slug
+              }
+              className="transition-colors hover:text-foreground"
+            >
+              {product.category.name}
+            </Link>
+
+            <ChevronRight className="h-4 w-4" />
+
+            <span className="truncate text-foreground">
               {product.name}
             </span>
           </div>
-        </div>
 
-        {/* PRODUIT */}
-        <section className="mx-auto max-w-7xl px-5 py-12 lg:px-8 lg:py-20">
+          {/* RETOUR */}
           <Link
             href="/boutique"
-            className="mb-10 inline-flex items-center gap-2 text-sm text-zinc-500 transition hover:text-white"
+            className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Retour à la boutique
           </Link>
 
-          <div className="grid gap-12 lg:grid-cols-2 lg:gap-20">
-            {/* IMAGE / VISUEL */}
-            <div className="relative aspect-square overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-zinc-900 via-zinc-900 to-blue-950/40">
+          {/* PRODUIT */}
+          <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
+            {/* IMAGE */}
+            <div className="relative aspect-square overflow-hidden rounded-3xl border border-border/50 bg-muted">
               {product.images?.[0] ? (
-                <img
+                <Image
                   src={product.images[0]}
                   alt={product.name}
-                  className="h-full w-full object-cover"
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
                 />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative flex h-40 w-40 items-center justify-center rounded-[40px] border border-white/10 bg-white/5 shadow-2xl backdrop-blur-xl">
-                    <div className="absolute inset-0 rounded-[40px] bg-blue-500/10 blur-2xl" />
-
-                    <Zap className="relative h-16 w-16 text-blue-400" />
-                  </div>
+                <div className="flex h-full items-center justify-center">
+                  <Package className="h-24 w-24 text-muted-foreground/40" />
                 </div>
-              )}
-
-              {product.featured && (
-                <span className="absolute left-6 top-6 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-bold tracking-wider text-blue-300">
-                  PRODUIT POPULAIRE
-                </span>
               )}
             </div>
 
             {/* INFORMATIONS */}
-            <div className="flex flex-col justify-center">
-              <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-400">
+            <div className="flex flex-col">
+              {/* CATÉGORIE */}
+              <Link
+                href={
+                  "/boutique?categorie=" + product.category.slug
+                }
+                className="mb-3 w-fit text-sm font-semibold uppercase tracking-wider text-primary"
+              >
                 {product.category.name}
-              </p>
+              </Link>
 
-              <h1 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">
+              {/* NOM */}
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
                 {product.name}
               </h1>
 
               {/* PRIX */}
-              <div className="mt-6 flex flex-wrap items-end gap-4">
-                <p className="text-3xl font-bold">
+              <div className="mt-6 flex items-center gap-3">
+                <span className="text-3xl font-bold">
                   {product.price.toLocaleString("fr-FR")} FCFA
-                </p>
+                </span>
 
-                {product.comparePrice && (
-                  <p className="text-base text-zinc-600 line-through">
-                    {product.comparePrice.toLocaleString("fr-FR")} FCFA
-                  </p>
-                )}
+                {product.comparePrice &&
+                  product.comparePrice > product.price && (
+                    <span className="text-lg text-muted-foreground line-through">
+                      {product.comparePrice.toLocaleString(
+                        "fr-FR"
+                      )}{" "}
+                      FCFA
+                    </span>
+                  )}
               </div>
 
-              <div className="mt-8 h-px bg-white/10" />
-
               {/* DESCRIPTION */}
-              <p className="mt-8 text-base leading-7 text-zinc-400">
-                {product.description}
-              </p>
+              <div className="mt-8">
+                <h2 className="mb-3 text-lg font-semibold">
+                  Description
+                </h2>
+
+                <p className="whitespace-pre-line leading-7 text-muted-foreground">
+                  {product.description}
+                </p>
+              </div>
 
               {/* STOCK */}
-              <div className="mt-8 flex items-center gap-3">
-                <div
-                  className={
-                    "flex h-9 w-9 items-center justify-center rounded-full " +
-                    (product.stock > 0
-                      ? "bg-emerald-500/10 text-emerald-400"
-                      : "bg-red-500/10 text-red-400")
-                  }
-                >
-                  {product.stock > 0 ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <Package className="h-4 w-4" />
-                  )}
-                </div>
+              <div className="mt-8 flex items-center gap-2">
+                {product.stock > 0 ? (
+                  <>
+                    <Check className="h-5 w-5 text-green-600" />
 
-                <div>
-                  <p className="text-sm font-semibold">
-                    {product.stock > 0
-                      ? "Produit disponible"
-                      : "Rupture de stock"}
-                  </p>
+                    <span className="text-sm font-medium text-green-600">
+                      En stock
+                    </span>
 
-                  {product.stock > 0 && (
-                    <p className="text-xs text-zinc-500">
-                      {product.stock} exemplaire
-                      {product.stock > 1 ? "s" : ""} disponible
-                      {product.stock > 1 ? "s" : ""}
-                    </p>
-                  )}
-                </div>
+                    {product.stock <= 5 && (
+                      <span className="text-sm text-muted-foreground">
+                        — Plus que {product.stock} disponible
+                        {product.stock > 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
+
+                    <span className="text-sm font-medium text-red-600">
+                      Rupture de stock
+                    </span>
+                  </>
+                )}
               </div>
 
               {/* QUANTITÉ */}
               <div className="mt-8">
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                <p className="mb-3 text-sm font-medium">
                   Quantité
                 </p>
 
-                <div className="flex h-12 w-fit items-center rounded-xl border border-white/10 bg-white/[0.03]">
+                <div className="flex h-12 w-fit items-center rounded-xl border border-border">
                   <button
                     type="button"
-                    className="flex h-full w-12 items-center justify-center text-zinc-400 transition hover:text-white"
+                    className="flex h-full w-12 items-center justify-center transition-colors hover:bg-muted"
+                    aria-label="Diminuer la quantité"
                   >
                     <Minus className="h-4 w-4" />
                   </button>
 
-                  <span className="w-10 text-center text-sm font-semibold">
+                  <span className="flex w-12 justify-center font-medium">
                     1
                   </span>
 
                   <button
                     type="button"
-                    className="flex h-full w-12 items-center justify-center text-zinc-400 transition hover:text-white"
+                    className="flex h-full w-12 items-center justify-center transition-colors hover:bg-muted"
+                    aria-label="Augmenter la quantité"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
@@ -377,83 +392,90 @@ export default async function ProductPage({
               </div>
 
               {/* ACTIONS */}
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <AddToCartButton
-                  product={{
-                    id: product.id,
-                    name: product.name,
-                    slug: product.slug,
-                    price: product.price,
-                    stock: product.stock,
-                  }}
-                />
+              <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                <AddToCartButton product={product} />
 
-                <BuyNowButton
-                  product={{
-                    id: product.id,
-                    name: product.name,
-                    slug: product.slug,
-                    price: product.price,
-                    stock: product.stock,
-                  }}
-                />
+                <BuyNowButton product={product} />
               </div>
 
               {/* GARANTIES */}
-              <div className="mt-10 grid gap-4 border-t border-white/10 pt-8 sm:grid-cols-2">
-                <div className="flex gap-3">
-                  <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-400" />
+              <div className="mt-8 grid gap-4 rounded-2xl border border-border/50 bg-muted/30 p-5 sm:grid-cols-3">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
 
                   <div>
                     <p className="text-sm font-semibold">
                       Paiement sécurisé
                     </p>
 
-                    <p className="mt-1 text-xs text-zinc-500">
-                      Transactions sécurisées.
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Transactions protégées
                     </p>
                   </div>
                 </div>
 
-                <div className="flex gap-3">
-                  <Zap className="h-5 w-5 shrink-0 text-blue-400" />
+                <div className="flex items-start gap-3">
+                  <Zap className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
 
                   <div>
                     <p className="text-sm font-semibold">
                       Livraison rapide
                     </p>
 
-                    <p className="mt-1 text-xs text-zinc-500">
-                      Traitement rapide de votre commande.
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Accès rapide à votre achat
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Package className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+
+                  <div>
+                    <p className="text-sm font-semibold">
+                      Support Kobas Tech
+                    </p>
+
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Assistance disponible
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* REFERENCE */}
-              <p className="mt-8 text-xs text-zinc-600">
-                Référence produit : {product.sku}
-              </p>
+              {/* RÉFÉRENCE */}
+              {product.sku && (
+                <p className="mt-6 text-xs text-muted-foreground">
+                  Référence : {product.sku}
+                </p>
+              )}
             </div>
           </div>
-        </section>
+        </div>
 
         {/* FOOTER */}
-        <footer className="border-t border-white/5">
-          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-            <div>
-              <span className="font-semibold text-white">
-                KOBAS TECH
-              </span>
-
-              <span className="mx-2">•</span>
-
-              Technologie. Simplicité. Confiance.
-            </div>
-
+        <footer className="mt-20 border-t border-border/50">
+          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-muted-foreground sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
             <p>
-              © {new Date().getFullYear()} Kobas Tech.
+              © {new Date().getFullYear()} Kobas Tech. Tous
+              droits réservés.
             </p>
+
+            <div className="flex gap-5">
+              <Link
+                href="/a-propos"
+                className="transition-colors hover:text-foreground"
+              >
+                À propos
+              </Link>
+
+              <Link
+                href="/contact"
+                className="transition-colors hover:text-foreground"
+              >
+                Contact
+              </Link>
+            </div>
           </div>
         </footer>
       </main>
