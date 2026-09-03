@@ -4,8 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
+  CheckCircle2,
   ClipboardList,
   Download,
+  Eye,
+  EyeOff,
+  KeyRound,
   Loader2,
   LogOut,
   Mail,
@@ -69,6 +73,19 @@ export default function ComptePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  // Sécurité
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -196,6 +213,71 @@ export default function ComptePage() {
     }
   }
 
+  async function handlePasswordChange() {
+    setPasswordError("");
+    setPasswordSuccess("");
+
+    if (!newPassword || !confirmPassword) {
+      setPasswordError(
+        "Veuillez remplir tous les champs obligatoires."
+      );
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError(
+        "Le nouveau mot de passe doit contenir au moins 8 caractères."
+      );
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError(
+        "Les deux nouveaux mots de passe ne correspondent pas."
+      );
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+
+      const response = await fetch("/api/customers/me/password", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Impossible de modifier le mot de passe."
+        );
+      }
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+
+      setPasswordSuccess(
+        "Votre mot de passe a été modifié avec succès."
+      );
+    } catch (err) {
+      setPasswordError(
+        err instanceof Error
+          ? err.message
+          : "Une erreur est survenue."
+      );
+    } finally {
+      setChangingPassword(false);
+    }
+  }
+
   if (status === "loading" || loading) {
     return (
       <main className="min-h-screen bg-[#08090d] text-white">
@@ -282,161 +364,351 @@ export default function ComptePage() {
 
         {/* PROFIL */}
         {tab === "profil" && (
-          <div className="mt-8 max-w-2xl rounded-2xl border border-white/10 bg-white/[0.025] p-6 sm:p-8">
-            <div className="mb-6 flex items-center gap-2 text-sm text-zinc-500">
-              <Mail className="h-4 w-4" />
+          <div className="mt-8 space-y-6">
+            <div className="max-w-2xl rounded-2xl border border-white/10 bg-white/[0.025] p-6 sm:p-8">
+              <div className="mb-6 flex items-center gap-2 text-sm text-zinc-500">
+                <Mail className="h-4 w-4" />
 
-              {customer.email}
+                {customer.email}
 
-              <span className="text-xs text-zinc-700">
-                (non modifiable)
-              </span>
+                <span className="text-xs text-zinc-700">
+                  (non modifiable)
+                </span>
+              </div>
+
+              <div className="space-y-5">
+                {/* PRÉNOM / NOM */}
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-xs font-semibold text-zinc-400">
+                      Prénom
+                    </label>
+
+                    <input
+                      type="text"
+                      value={formData.firstName}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          firstName: e.target.value,
+                        })
+                      }
+                      className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm outline-none transition focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-xs font-semibold text-zinc-400">
+                      Nom
+                    </label>
+
+                    <input
+                      type="text"
+                      value={formData.lastName}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          lastName: e.target.value,
+                        })
+                      }
+                      className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm outline-none transition focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* WHATSAPP */}
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-zinc-400">
+                    Numéro WhatsApp
+                  </label>
+
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" />
+
+                    <input
+                      type="tel"
+                      value={formData.whatsapp}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          whatsapp: e.target.value,
+                        })
+                      }
+                      className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] pl-11 pr-4 text-sm outline-none transition focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* ADRESSE */}
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-zinc-400">
+                    Adresse
+                  </label>
+
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" />
+
+                    <input
+                      type="text"
+                      value={formData.address}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          address: e.target.value,
+                        })
+                      }
+                      placeholder="Quartier, rue..."
+                      className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] pl-11 pr-4 text-sm outline-none transition placeholder:text-zinc-700 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* VILLE */}
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-zinc-400">
+                    Ville
+                  </label>
+
+                  <input
+                    type="text"
+                    value={formData.city}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        city: e.target.value,
+                      })
+                    }
+                    placeholder="Cotonou, Porto-Novo..."
+                    className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm outline-none transition placeholder:text-zinc-700 focus:border-blue-500"
+                  />
+                </div>
+
+                {/* ERREUR */}
+                {error && (
+                  <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+                    <p className="text-sm text-red-400">{error}</p>
+                  </div>
+                )}
+
+                {/* SUCCÈS */}
+                {success && (
+                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
+                    <p className="text-sm text-emerald-400">
+                      Profil mis à jour avec succès.
+                    </p>
+                  </div>
+                )}
+
+                {/* SAUVEGARDE */}
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-black transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Enregistrement...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Enregistrer les modifications
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-5">
-              {/* PRÉNOM / NOM */}
-              <div className="grid gap-5 sm:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-xs font-semibold text-zinc-400">
-                    Prénom
-                  </label>
-
-                  <input
-                    type="text"
-                    value={formData.firstName}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        firstName: e.target.value,
-                      })
-                    }
-                    className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm outline-none transition focus:border-blue-500"
-                  />
+            {/* SÉCURITÉ */}
+            <div className="max-w-2xl rounded-2xl border border-white/10 bg-white/[0.025] p-6 sm:p-8">
+              <div className="mb-6 flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10">
+                  <KeyRound className="h-5 w-5 text-blue-400" />
                 </div>
 
                 <div>
+                  <h2 className="text-lg font-bold">
+                    Sécurité
+                  </h2>
+
+                  <p className="mt-1 text-sm text-zinc-500">
+                    Gérez le mot de passe de votre compte.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                {/* ANCIEN MOT DE PASSE */}
+                <div>
                   <label className="mb-2 block text-xs font-semibold text-zinc-400">
-                    Nom
+                    Ancien mot de passe
                   </label>
 
-                  <input
-                    type="text"
-                    value={formData.lastName}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        lastName: e.target.value,
-                      })
-                    }
-                    className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm outline-none transition focus:border-blue-500"
-                  />
+                  <div className="relative">
+                    <input
+                      type={
+                        showCurrentPassword ? "text" : "password"
+                      }
+                      value={currentPassword}
+                      onChange={(e) =>
+                        setCurrentPassword(e.target.value)
+                      }
+                      placeholder="Votre ancien mot de passe"
+                      autoComplete="current-password"
+                      className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 pr-12 text-sm outline-none transition focus:border-blue-500"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowCurrentPassword(
+                          !showCurrentPassword
+                        )
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-zinc-500 transition hover:text-white"
+                      aria-label={
+                        showCurrentPassword
+                          ? "Masquer le mot de passe"
+                          : "Afficher le mot de passe"
+                      }
+                    >
+                      {showCurrentPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {/* WHATSAPP */}
-              <div>
-                <label className="mb-2 block text-xs font-semibold text-zinc-400">
-                  Numéro WhatsApp
-                </label>
+                {/* NOUVEAU MOT DE PASSE */}
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-zinc-400">
+                    Nouveau mot de passe
+                  </label>
 
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" />
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) =>
+                        setNewPassword(e.target.value)
+                      }
+                      placeholder="Minimum 8 caractères"
+                      autoComplete="new-password"
+                      className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 pr-12 text-sm outline-none transition focus:border-blue-500"
+                    />
 
-                  <input
-                    type="tel"
-                    value={formData.whatsapp}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        whatsapp: e.target.value,
-                      })
-                    }
-                    className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] pl-11 pr-4 text-sm outline-none transition focus:border-blue-500"
-                  />
-                </div>
-              </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowNewPassword(!showNewPassword)
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-zinc-500 transition hover:text-white"
+                      aria-label={
+                        showNewPassword
+                          ? "Masquer le mot de passe"
+                          : "Afficher le mot de passe"
+                      }
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
 
-              {/* ADRESSE */}
-              <div>
-                <label className="mb-2 block text-xs font-semibold text-zinc-400">
-                  Adresse
-                </label>
-
-                <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" />
-
-                  <input
-                    type="text"
-                    value={formData.address}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        address: e.target.value,
-                      })
-                    }
-                    placeholder="Quartier, rue..."
-                    className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] pl-11 pr-4 text-sm outline-none transition placeholder:text-zinc-700 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              {/* VILLE */}
-              <div>
-                <label className="mb-2 block text-xs font-semibold text-zinc-400">
-                  Ville
-                </label>
-
-                <input
-                  type="text"
-                  value={formData.city}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      city: e.target.value,
-                    })
-                  }
-                  placeholder="Cotonou, Porto-Novo..."
-                  className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm outline-none transition placeholder:text-zinc-700 focus:border-blue-500"
-                />
-              </div>
-
-              {/* ERREUR */}
-              {error && (
-                <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
-                  <p className="text-sm text-red-400">
-                    {error}
+                  <p className="mt-2 text-xs text-zinc-600">
+                    Utilisez au moins 8 caractères.
                   </p>
                 </div>
-              )}
 
-              {/* SUCCÈS */}
-              {success && (
-                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
-                  <p className="text-sm text-emerald-400">
-                    Profil mis à jour avec succès.
-                  </p>
+                {/* CONFIRMATION */}
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-zinc-400">
+                    Confirmer le nouveau mot de passe
+                  </label>
+
+                  <div className="relative">
+                    <input
+                      type={
+                        showConfirmPassword ? "text" : "password"
+                      }
+                      value={confirmPassword}
+                      onChange={(e) =>
+                        setConfirmPassword(e.target.value)
+                      }
+                      placeholder="Confirmez votre nouveau mot de passe"
+                      autoComplete="new-password"
+                      className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 pr-12 text-sm outline-none transition focus:border-blue-500"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowConfirmPassword(
+                          !showConfirmPassword
+                        )
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-zinc-500 transition hover:text-white"
+                      aria-label={
+                        showConfirmPassword
+                          ? "Masquer le mot de passe"
+                          : "Afficher le mot de passe"
+                      }
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
-              )}
 
-              {/* SAUVEGARDE */}
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className="flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-black transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Enregistrement...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" />
-                    Enregistrer les modifications
-                  </>
+                {/* ERREUR MOT DE PASSE */}
+                {passwordError && (
+                  <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+                    <p className="text-sm text-red-400">
+                      {passwordError}
+                    </p>
+                  </div>
                 )}
-              </button>
+
+                {/* SUCCÈS MOT DE PASSE */}
+                {passwordSuccess && (
+                  <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+
+                    <p className="text-sm text-emerald-400">
+                      {passwordSuccess}
+                    </p>
+                  </div>
+                )}
+
+                {/* BOUTON */}
+                <button
+                  type="button"
+                  onClick={handlePasswordChange}
+                  disabled={changingPassword}
+                  className="flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-black transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {changingPassword ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Modification...
+                    </>
+                  ) : (
+                    <>
+                      <KeyRound className="h-4 w-4" />
+                      Modifier le mot de passe
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}
