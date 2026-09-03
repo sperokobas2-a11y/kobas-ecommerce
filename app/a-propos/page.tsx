@@ -1,3 +1,4 @@
+import Footer from "@/components/Footer";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -427,17 +428,7 @@ export default function AProposPage() {
         </section>
 
         {/* FOOTER */}
-        <footer className="border-t border-white/5">
-          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-            <div>
-              <span className="font-semibold text-white">KOBAS TECH</span>
-              <span className="mx-2">•</span>
-              Technologie. Simplicité. Confiance.
-            </div>
-
-            <p>© {new Date().getFullYear()} Kobas Tech.</p>
-          </div>
-        </footer>
+        <Footer />
       </main>
     </>
   );
