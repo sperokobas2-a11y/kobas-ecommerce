@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import {
   ArrowLeft,
+  Download,
   ImagePlus,
   Loader2,
   Package,
@@ -27,6 +28,7 @@ type Product = {
   stock: number;
   sku: string | null;
   images: string[];
+  downloadUrl: string | null;
   featured: boolean;
   active: boolean;
   categoryId: string;
@@ -39,12 +41,9 @@ export default function ModifierProduitPage() {
 
   const productId = params.id as string;
 
-  const [product, setProduct] =
-    useState<Product | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
 
-  const [categories, setCategories] = useState<Category[]>(
-    []
-  );
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -59,6 +58,7 @@ export default function ModifierProduitPage() {
   const [sku, setSku] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [image, setImage] = useState("");
+  const [downloadUrl, setDownloadUrl] = useState("");
   const [featured, setFeatured] = useState(false);
   const [active, setActive] = useState(true);
 
@@ -68,40 +68,32 @@ export default function ModifierProduitPage() {
         setLoading(true);
         setError("");
 
-        const [productResponse, categoriesResponse] =
-          await Promise.all([
-            fetch(`/api/admin/products/${productId}`),
-            fetch("/api/admin/categories"),
-          ]);
+        const [productResponse, categoriesResponse] = await Promise.all([
+          fetch(`/api/admin/products/${productId}`),
+          fetch("/api/admin/categories"),
+        ]);
 
-        const productData =
-          await productResponse.json();
+        const productData = await productResponse.json();
 
-        const categoriesData =
-          await categoriesResponse.json();
+        const categoriesData = await categoriesResponse.json();
 
         if (!productResponse.ok) {
           throw new Error(
-            productData.error ||
-              "Impossible de charger le produit."
+            productData.error || "Impossible de charger le produit."
           );
         }
 
         if (!categoriesResponse.ok) {
           throw new Error(
-            categoriesData.error ||
-              "Impossible de charger les catégories."
+            categoriesData.error || "Impossible de charger les catégories."
           );
         }
 
-        const currentProduct: Product =
-          productData.product;
+        const currentProduct: Product = productData.product;
 
         setProduct(currentProduct);
 
-        setCategories(
-          categoriesData.categories
-        );
+        setCategories(categoriesData.categories);
 
         setName(currentProduct.name);
         setDescription(currentProduct.description);
@@ -117,24 +109,18 @@ export default function ModifierProduitPage() {
 
         setSku(currentProduct.sku || "");
 
-        setCategoryId(
-          currentProduct.categoryId
-        );
+        setCategoryId(currentProduct.categoryId);
 
-        setImage(
-          currentProduct.images?.[0] || ""
-        );
+        setImage(currentProduct.images?.[0] || "");
 
-        setFeatured(
-          currentProduct.featured
-        );
+        setDownloadUrl(currentProduct.downloadUrl || "");
+
+        setFeatured(currentProduct.featured);
 
         setActive(currentProduct.active);
       } catch (err) {
         setError(
-          err instanceof Error
-            ? err.message
-            : "Une erreur est survenue."
+          err instanceof Error ? err.message : "Une erreur est survenue."
         );
       } finally {
         setLoading(false);
@@ -146,9 +132,7 @@ export default function ModifierProduitPage() {
     }
   }, [productId]);
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
-  ) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setSaving(true);
@@ -156,63 +140,48 @@ export default function ModifierProduitPage() {
 
     try {
       if (!name.trim()) {
-        throw new Error(
-          "Le nom du produit est obligatoire."
-        );
+        throw new Error("Le nom du produit est obligatoire.");
       }
 
       if (!description.trim()) {
-        throw new Error(
-          "La description est obligatoire."
-        );
+        throw new Error("La description est obligatoire.");
       }
 
       if (!categoryId) {
-        throw new Error(
-          "Veuillez sélectionner une catégorie."
-        );
+        throw new Error("Veuillez sélectionner une catégorie.");
       }
 
-      const response = await fetch(
-        `/api/admin/products/${productId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name,
-            description,
-            price: Number(price),
-            comparePrice: comparePrice
-              ? Number(comparePrice)
-              : null,
-            stock: Number(stock),
-            sku: sku || null,
-            categoryId,
-            images: image ? [image] : [],
-            featured,
-            active,
-          }),
-        }
-      );
+      const response = await fetch(`/api/admin/products/${productId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          description,
+          price: Number(price),
+          comparePrice: comparePrice ? Number(comparePrice) : null,
+          stock: Number(stock),
+          sku: sku || null,
+          categoryId,
+          images: image ? [image] : [],
+          downloadUrl: downloadUrl || null,
+          featured,
+          active,
+        }),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.error ||
-            "Impossible de modifier le produit."
-        );
+        throw new Error(data.error || "Impossible de modifier le produit.");
       }
 
       router.push("/admin/produits");
       router.refresh();
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Une erreur est survenue."
+        err instanceof Error ? err.message : "Une erreur est survenue."
       );
 
       setSaving(false);
@@ -232,20 +201,14 @@ export default function ModifierProduitPage() {
       setDeleting(true);
       setError("");
 
-      const response = await fetch(
-        `/api/admin/products/${productId}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`/api/admin/products/${productId}`, {
+        method: "DELETE",
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.error ||
-            "Impossible de supprimer le produit."
-        );
+        throw new Error(data.error || "Impossible de supprimer le produit.");
       }
 
       router.push("/admin/produits");
@@ -278,9 +241,7 @@ export default function ModifierProduitPage() {
         <div className="mx-auto max-w-xl text-center">
           <Package className="mx-auto h-12 w-12 text-zinc-700" />
 
-          <h1 className="mt-5 text-2xl font-bold">
-            Produit introuvable
-          </h1>
+          <h1 className="mt-5 text-2xl font-bold">Produit introuvable</h1>
 
           <p className="mt-2 text-sm text-zinc-600">
             Le produit demandé n&lsqo;existe pas ou a été supprimé.
@@ -303,18 +264,13 @@ export default function ModifierProduitPage() {
       {/* HEADER */}
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#08090d]/90 backdrop-blur-xl">
         <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 lg:px-8">
-          <Link
-            href="/admin"
-            className="flex items-center gap-3"
-          >
+          <Link href="/admin" className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600">
               <Zap className="h-5 w-5 fill-white" />
             </div>
 
             <div>
-              <p className="text-lg font-bold">
-                KOBAS
-              </p>
+              <p className="text-lg font-bold">KOBAS</p>
 
               <p className="-mt-1 text-[9px] font-semibold tracking-[0.28em] text-blue-400">
                 TECH ADMIN
@@ -348,19 +304,14 @@ export default function ModifierProduitPage() {
           </p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="mt-10 space-y-6"
-        >
+        <form onSubmit={handleSubmit} className="mt-10 space-y-6">
           {/* INFORMATIONS */}
           <section className="rounded-2xl border border-white/10 bg-white/[0.025] p-6">
             <div className="flex items-center gap-3">
               <Package className="h-5 w-5 text-blue-400" />
 
               <div>
-                <h2 className="font-bold">
-                  Informations du produit
-                </h2>
+                <h2 className="font-bold">Informations du produit</h2>
 
                 <p className="mt-1 text-xs text-zinc-600">
                   Informations principales du produit.
@@ -385,9 +336,7 @@ export default function ModifierProduitPage() {
                 <textarea
                   required
                   value={description}
-                  onChange={(event) =>
-                    setDescription(event.target.value)
-                  }
+                  onChange={(event) => setDescription(event.target.value)}
                   rows={5}
                   className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm outline-none transition placeholder:text-zinc-700 focus:border-blue-500"
                 />
@@ -416,9 +365,7 @@ export default function ModifierProduitPage() {
 
           {/* STOCK */}
           <section className="rounded-2xl border border-white/10 bg-white/[0.025] p-6">
-            <h2 className="font-bold">
-              Stock et identification
-            </h2>
+            <h2 className="font-bold">Stock et identification</h2>
 
             <div className="mt-6 grid gap-5 sm:grid-cols-3">
               <Field
@@ -445,16 +392,11 @@ export default function ModifierProduitPage() {
                 <select
                   required
                   value={categoryId}
-                  onChange={(event) =>
-                    setCategoryId(event.target.value)
-                  }
+                  onChange={(event) => setCategoryId(event.target.value)}
                   className="h-12 w-full rounded-xl border border-white/10 bg-[#111218] px-4 text-sm text-white outline-none focus:border-blue-500"
                 >
                   {categories.map((category) => (
-                    <option
-                      key={category.id}
-                      value={category.id}
-                    >
+                    <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
                   ))}
@@ -469,9 +411,7 @@ export default function ModifierProduitPage() {
               <ImagePlus className="h-5 w-5 text-violet-400" />
 
               <div>
-                <h2 className="font-bold">
-                  Image du produit
-                </h2>
+                <h2 className="font-bold">Image du produit</h2>
 
                 <p className="mt-1 text-xs text-zinc-600">
                   URL de l&apos;image principale.
@@ -499,11 +439,36 @@ export default function ModifierProduitPage() {
             </div>
           </section>
 
+          {/* TÉLÉCHARGEMENT */}
+          <section className="rounded-2xl border border-white/10 bg-white/[0.025] p-6">
+            <div className="flex items-center gap-3">
+              <Download className="h-5 w-5 text-emerald-400" />
+
+              <div>
+                <h2 className="font-bold">
+                  Fichier téléchargeable (optionnel)
+                </h2>
+
+                <p className="mt-1 text-xs text-zinc-600">
+                  Pour un produit numérique. Le client recevra ce lien
+                  après confirmation du paiement.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <Field
+                label="Lien de téléchargement"
+                value={downloadUrl}
+                onChange={setDownloadUrl}
+                placeholder="https://gofile.io/d/..."
+              />
+            </div>
+          </section>
+
           {/* OPTIONS */}
           <section className="rounded-2xl border border-white/10 bg-white/[0.025] p-6">
-            <h2 className="font-bold">
-              Options
-            </h2>
+            <h2 className="font-bold">Options</h2>
 
             <div className="mt-6 space-y-4">
               <Toggle
@@ -525,9 +490,7 @@ export default function ModifierProduitPage() {
           {/* ERREUR */}
           {error && (
             <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
-              <p className="text-sm text-red-400">
-                {error}
-              </p>
+              <p className="text-sm text-red-400">{error}</p>
             </div>
           )}
 
@@ -606,11 +569,7 @@ function Field({
     <div>
       <label className="mb-2 block text-xs font-semibold text-zinc-400">
         {label}
-        {required && (
-          <span className="ml-1 text-blue-400">
-            *
-          </span>
-        )}
+        {required && <span className="ml-1 text-blue-400">*</span>}
       </label>
 
       <input
@@ -618,9 +577,7 @@ function Field({
         min={min}
         required={required}
         value={value}
-        onChange={(event) =>
-          onChange(event.target.value)
-        }
+        onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         className="h-12 w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 text-sm outline-none transition placeholder:text-zinc-700 focus:border-blue-500"
       />
@@ -646,13 +603,9 @@ function Toggle({
   return (
     <div className="flex items-center justify-between gap-5 rounded-xl border border-white/5 bg-white/[0.02] p-4">
       <div>
-        <p className="text-sm font-semibold">
-          {title}
-        </p>
+        <p className="text-sm font-semibold">{title}</p>
 
-        <p className="mt-1 text-xs text-zinc-600">
-          {description}
-        </p>
+        <p className="mt-1 text-xs text-zinc-600">{description}</p>
       </div>
 
       <button
@@ -661,16 +614,12 @@ function Toggle({
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-          checked
-            ? "bg-blue-500"
-            : "bg-zinc-700"
+          checked ? "bg-blue-500" : "bg-zinc-700"
         }`}
       >
         <span
           className={`absolute top-1 h-4 w-4 rounded-full bg-white transition ${
-            checked
-              ? "left-6"
-              : "left-1"
+            checked ? "left-6" : "left-1"
           }`}
         />
       </button>
