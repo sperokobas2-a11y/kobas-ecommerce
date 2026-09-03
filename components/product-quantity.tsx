@@ -1,4 +1,3 @@
-```tsx
 "use client";
 
 import { Minus, Plus } from "lucide-react";
@@ -50,4 +49,3 @@ export default function ProductQuantity({
     </div>
   );
 }
-```
