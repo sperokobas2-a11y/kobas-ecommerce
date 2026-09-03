@@ -1,5 +1,6 @@
 import FavoriteButton from "@/components/favorite-button";
 import ProductReviews from "@/components/product-reviews";
+import ProductActions from "@/components/product-actions";
 import Footer from "@/components/Footer";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -9,17 +10,13 @@ import {
   ArrowLeft,
   Check,
   ChevronRight,
-  Minus,
   Package,
-  Plus,
   ShieldCheck,
   ShoppingCart,
   Zap,
 } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
-import AddToCartButton from "@/components/add-to-cart-button";
-import BuyNowButton from "@/components/buy-now-button";
 
 export const dynamic = "force-dynamic";
 
@@ -358,42 +355,10 @@ export default async function ProductPage({
                 )}
               </div>
 
-              {/* QUANTITÉ */}
-              <div className="mt-8">
-                <p className="mb-3 text-sm font-medium text-white">
-                  Quantité
-                </p>
+              {/* QUANTITÉ + ACTIONS */}
+              <ProductActions product={product} />
 
-                <div className="flex h-12 w-fit items-center rounded-xl border border-white/10 bg-zinc-900">
-                  <button
-                    type="button"
-                    className="flex h-full w-12 items-center justify-center text-zinc-200 transition-colors hover:bg-zinc-800 hover:text-white"
-                    aria-label="Diminuer la quantité"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-
-                  <span className="flex w-12 justify-center font-medium text-white">
-                    1
-                  </span>
-
-                  <button
-                    type="button"
-                    className="flex h-full w-12 items-center justify-center text-zinc-200 transition-colors hover:bg-zinc-800 hover:text-white"
-                    aria-label="Augmenter la quantité"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* ACTIONS */}
-              <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                <AddToCartButton product={product} />
-
-                <BuyNowButton product={product} />
-              </div>
-
+              {/* FAVORIS */}
               <div className="mt-3">
                 <FavoriteButton
                   productId={product.id}
