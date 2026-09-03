@@ -1,3 +1,4 @@
+```ts
 import "dotenv/config";
 import { PrismaClient } from "../lib/generated/prisma/client";
 
@@ -60,7 +61,7 @@ async function main() {
       comparePrice: 50000,
       stock: 50,
       sku: "KOBAS-GAMING-001",
-      images: [],
+      images: ["/products/pack-gaming-premium.png"],
       featured: true,
       categoryId: gaming.id,
     },
@@ -71,7 +72,7 @@ async function main() {
       price: 25000,
       stock: 50,
       sku: "KOBAS-GAMING-002",
-      images: [],
+      images: ["/products/pack-gaming-starter.png"],
       featured: false,
       categoryId: gaming.id,
     },
@@ -83,7 +84,7 @@ async function main() {
       comparePrice: 35000,
       stock: 30,
       sku: "KOBAS-SOFT-001",
-      images: [],
+      images: ["/products/pack-logiciels-pro.png"],
       featured: true,
       categoryId: logiciels.id,
     },
@@ -94,7 +95,7 @@ async function main() {
       price: 15000,
       stock: 40,
       sku: "KOBAS-SOFT-002",
-      images: [],
+      images: ["/products/pack-logiciels-starter.png"],
       featured: false,
       categoryId: logiciels.id,
     },
@@ -105,7 +106,7 @@ async function main() {
       price: 15000,
       stock: 25,
       sku: "KOBAS-TECH-001",
-      images: [],
+      images: ["/products/pack-tech-premium.png"],
       featured: true,
       categoryId: informatique.id,
     },
@@ -116,7 +117,7 @@ async function main() {
       price: 30000,
       stock: 20,
       sku: "KOBAS-INFO-001",
-      images: [],
+      images: ["/products/pack-informatique-pro.png"],
       featured: false,
       categoryId: informatique.id,
     },
@@ -141,3 +142,4 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+```
