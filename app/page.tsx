@@ -382,13 +382,12 @@ export default async function Home() {
   )}
 
   {product.featured && (
-    <span className="absolute left-4 top-4 rounded-full border border-blue-400/20 bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold tracking-wider text-blue-300">
-      POPULAIRE
-    </span>
-  )}
-
-                    </Link>
-
+  <span className="absolute left-4 top-4 rounded-full border border-blue-400/20 bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold tracking-wider text-blue-300">
+    POPULAIRE
+  </span>
+)}
+</div>
+                       </Link>
                     <div className="p-5">
                       <p className="text-xs font-medium text-blue-400">
                         {product.category.name}
