@@ -25,10 +25,14 @@ export default function AdminLoginPage() {
     });
 
     if (result?.error) {
-      setError("Email ou mot de passe incorrect.");
-      setLoading(false);
-      return;
-    }
+  setError(
+    result.error.includes("Trop de tentatives")
+      ? result.error
+      : "Email ou mot de passe incorrect."
+  );
+  setLoading(false);
+  return;
+}
 
     window.location.href = "/admin";
   }
