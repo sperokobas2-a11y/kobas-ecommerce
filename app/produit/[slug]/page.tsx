@@ -176,9 +176,9 @@ export default async function ProductPage({
         }}
       />
 
-      <main className="min-h-screen bg-background">
+      <main className="min-h-screen bg-zinc-950 text-white">
         {/* HEADER */}
-        <header className="border-b border-border/50 bg-background/95 backdrop-blur">
+        <header className="border-b border-white/10 bg-zinc-950/95 backdrop-blur">
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
             <Link
               href="/"
@@ -190,35 +190,35 @@ export default async function ProductPage({
             <nav className="hidden items-center gap-6 md:flex">
               <Link
                 href="/"
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
               >
                 Accueil
               </Link>
 
               <Link
                 href="/boutique"
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
               >
                 Boutique
               </Link>
 
               <Link
                 href="/categories"
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
               >
                 Catégories
               </Link>
 
               <Link
                 href="/a-propos"
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
               >
                 À propos
               </Link>
 
               <Link
                 href="/contact"
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
               >
                 Contact
               </Link>
@@ -226,7 +226,7 @@ export default async function ProductPage({
 
             <Link
               href="/boutique"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-border transition-colors hover:bg-muted"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 transition-colors hover:bg-zinc-800"
               aria-label="Voir la boutique"
             >
               <ShoppingCart className="h-5 w-5" />
@@ -237,10 +237,10 @@ export default async function ProductPage({
         {/* CONTENU */}
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {/* BREADCRUMB */}
-          <div className="mb-8 flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="mb-8 flex items-center gap-2 text-sm text-zinc-400">
             <Link
               href="/boutique"
-              className="transition-colors hover:text-foreground"
+              className="transition-colors hover:text-white"
             >
               Boutique
             </Link>
@@ -248,17 +248,15 @@ export default async function ProductPage({
             <ChevronRight className="h-4 w-4" />
 
             <Link
-              href={
-                "/boutique?categorie=" + product.category.slug
-              }
-              className="transition-colors hover:text-foreground"
+              href={"/boutique?categorie=" + product.category.slug}
+              className="transition-colors hover:text-white"
             >
               {product.category.name}
             </Link>
 
             <ChevronRight className="h-4 w-4" />
 
-            <span className="truncate text-foreground">
+            <span className="truncate text-white">
               {product.name}
             </span>
           </div>
@@ -266,7 +264,7 @@ export default async function ProductPage({
           {/* RETOUR */}
           <Link
             href="/boutique"
-            className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-zinc-400 transition-colors hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
             Retour à la boutique
@@ -275,7 +273,7 @@ export default async function ProductPage({
           {/* PRODUIT */}
           <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
             {/* IMAGE */}
-            <div className="relative aspect-square overflow-hidden rounded-3xl border border-border/50 bg-muted">
+            <div className="relative aspect-square overflow-hidden rounded-3xl border border-white/10 bg-zinc-900">
               {product.images?.[0] ? (
                 <Image
                   src={product.images[0]}
@@ -283,11 +281,11 @@ export default async function ProductPage({
                   fill
                   priority
                   sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover"
+                  className="object-contain"
                 />
               ) : (
                 <div className="flex h-full items-center justify-center">
-                  <Package className="h-24 w-24 text-muted-foreground/40" />
+                  <Package className="h-24 w-24 text-zinc-500" />
                 </div>
               )}
             </div>
@@ -296,9 +294,7 @@ export default async function ProductPage({
             <div className="flex flex-col">
               {/* CATÉGORIE */}
               <Link
-                href={
-                  "/boutique?categorie=" + product.category.slug
-                }
+                href={"/boutique?categorie=" + product.category.slug}
                 className="mb-3 w-fit text-sm font-semibold uppercase tracking-wider text-primary"
               >
                 {product.category.name}
@@ -317,11 +313,8 @@ export default async function ProductPage({
 
                 {product.comparePrice &&
                   product.comparePrice > product.price && (
-                    <span className="text-lg text-muted-foreground line-through">
-                      {product.comparePrice.toLocaleString(
-                        "fr-FR"
-                      )}{" "}
-                      FCFA
+                    <span className="text-lg text-zinc-400 line-through">
+                      {product.comparePrice.toLocaleString("fr-FR")} FCFA
                     </span>
                   )}
               </div>
@@ -332,7 +325,7 @@ export default async function ProductPage({
                   Description
                 </h2>
 
-                <p className="whitespace-pre-line leading-7 text-muted-foreground">
+                <p className="whitespace-pre-line leading-7 text-zinc-400">
                   {product.description}
                 </p>
               </div>
@@ -341,14 +334,14 @@ export default async function ProductPage({
               <div className="mt-8 flex items-center gap-2">
                 {product.stock > 0 ? (
                   <>
-                    <Check className="h-5 w-5 text-green-600" />
+                    <Check className="h-5 w-5 text-green-500" />
 
-                    <span className="text-sm font-medium text-green-600">
+                    <span className="text-sm font-medium text-green-500">
                       En stock
                     </span>
 
                     {product.stock <= 5 && (
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-zinc-400">
                         — Plus que {product.stock} disponible
                         {product.stock > 1 ? "s" : ""}
                       </span>
@@ -358,7 +351,7 @@ export default async function ProductPage({
                   <>
                     <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
 
-                    <span className="text-sm font-medium text-red-600">
+                    <span className="text-sm font-medium text-red-500">
                       Rupture de stock
                     </span>
                   </>
@@ -371,10 +364,10 @@ export default async function ProductPage({
                   Quantité
                 </p>
 
-                <div className="flex h-12 w-fit items-center rounded-xl border border-border">
+                <div className="flex h-12 w-fit items-center rounded-xl border border-white/10">
                   <button
                     type="button"
-                    className="flex h-full w-12 items-center justify-center transition-colors hover:bg-muted"
+                    className="flex h-full w-12 items-center justify-center transition-colors hover:bg-zinc-800"
                     aria-label="Diminuer la quantité"
                   >
                     <Minus className="h-4 w-4" />
@@ -386,7 +379,7 @@ export default async function ProductPage({
 
                   <button
                     type="button"
-                    className="flex h-full w-12 items-center justify-center transition-colors hover:bg-muted"
+                    className="flex h-full w-12 items-center justify-center transition-colors hover:bg-zinc-800"
                     aria-label="Augmenter la quantité"
                   >
                     <Plus className="h-4 w-4" />
@@ -396,17 +389,20 @@ export default async function ProductPage({
 
               {/* ACTIONS */}
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
-  <AddToCartButton product={product} />
+                <AddToCartButton product={product} />
 
-  <BuyNowButton product={product} />
-</div>
+                <BuyNowButton product={product} />
+              </div>
 
-<div className="mt-3">
-  <FavoriteButton productId={product.id} variant="full" />
-</div>
+              <div className="mt-3">
+                <FavoriteButton
+                  productId={product.id}
+                  variant="full"
+                />
+              </div>
 
               {/* GARANTIES */}
-              <div className="mt-8 grid gap-4 rounded-2xl border border-border/50 bg-muted/30 p-5 sm:grid-cols-3">
+              <div className="mt-8 grid gap-4 rounded-2xl border border-white/10 bg-zinc-900/50 p-5 sm:grid-cols-3">
                 <div className="flex items-start gap-3">
                   <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
 
@@ -415,7 +411,7 @@ export default async function ProductPage({
                       Paiement sécurisé
                     </p>
 
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-zinc-400">
                       Transactions protégées
                     </p>
                   </div>
@@ -429,7 +425,7 @@ export default async function ProductPage({
                       Livraison rapide
                     </p>
 
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-zinc-400">
                       Accès rapide à votre achat
                     </p>
                   </div>
@@ -443,16 +439,16 @@ export default async function ProductPage({
                       Support Kobas Tech
                     </p>
 
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-xs text-zinc-400">
                       Assistance disponible
                     </p>
                   </div>
                 </div>
               </div>
 
-           {/* RÉFÉRENCE */}
+              {/* RÉFÉRENCE */}
               {product.sku && (
-                <p className="mt-6 text-xs text-muted-foreground">
+                <p className="mt-6 text-xs text-zinc-400">
                   Référence : {product.sku}
                 </p>
               )}
