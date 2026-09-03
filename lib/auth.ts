@@ -2,8 +2,47 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { cookies } from "next/headers";
 
 import { prisma } from "@/lib/prisma";
+
+const GOOGLE_LINK_COOKIE = "kobas_google_link";
+const GOOGLE_LINK_MAX_AGE = 10 * 60; // 10 minutes
+
+function createLinkSignature(customerId: string) {
+  const secret = process.env.AUTH_SECRET;
+
+  if (!secret) {
+    throw new Error("AUTH_SECRET manquant.");
+  }
+
+  return crypto
+    .createHmac("sha256", secret)
+    .update(customerId)
+    .digest("hex");
+}
+
+function createLinkCookieValue(customerId: string) {
+  return `${customerId}.${createLinkSignature(customerId)}`;
+}
+
+function verifyLinkCookieValue(value: string) {
+  const [customerId, signature] = value.split(".");
+
+  if (!customerId || !signature) {
+    return null;
+  }
+
+  const expectedSignature = createLinkSignature(customerId);
+
+  const isValid = crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+
+  return isValid ? customerId : null;
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -138,6 +177,95 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       const googleId = account.providerAccountId;
+
+      /*
+       * ============================================================
+       * LIEN GOOGLE EXPLICITE
+       * ============================================================
+       *
+       * Si le cookie de liaison existe, on ne fait PAS une connexion
+       * Google normale.
+       *
+       * On vérifie que le cookie appartient bien au client qui veut
+       * effectuer la liaison.
+       */
+
+      const cookieStore = await cookies();
+      const linkCookie = cookieStore.get(GOOGLE_LINK_COOKIE)?.value;
+
+      if (linkCookie) {
+        const customerId = verifyLinkCookieValue(linkCookie);
+
+        if (!customerId) {
+          return false;
+        }
+
+        const customer = await prisma.customer.findUnique({
+          where: {
+            id: customerId,
+          },
+          select: {
+            id: true,
+            googleId: true,
+          },
+        });
+
+        if (!customer) {
+          return false;
+        }
+
+        /*
+         * Vérifier que ce compte Google n'est pas déjà lié
+         * à un autre client.
+         */
+        const googleOwner = await prisma.customer.findFirst({
+          where: {
+            googleId,
+          },
+          select: {
+            id: true,
+          },
+        });
+
+        if (googleOwner && googleOwner.id !== customer.id) {
+          return false;
+        }
+
+        /*
+         * Le compte Google est déjà lié à ce même client.
+         */
+        if (customer.googleId === googleId) {
+          cookieStore.delete(GOOGLE_LINK_COOKIE);
+          return true;
+        }
+
+        /*
+         * Le client possède déjà un autre compte Google.
+         * On refuse de remplacer silencieusement l'ancien.
+         */
+        if (customer.googleId) {
+          return false;
+        }
+
+        await prisma.customer.update({
+          where: {
+            id: customer.id,
+          },
+          data: {
+            googleId,
+          },
+        });
+
+        cookieStore.delete(GOOGLE_LINK_COOKIE);
+
+        return true;
+      }
+
+      /*
+       * ============================================================
+       * CONNEXION GOOGLE NORMALE
+       * ============================================================
+       */
 
       let customer = await prisma.customer.findUnique({
         where: {
