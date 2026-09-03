@@ -182,13 +182,12 @@ export default async function Home() {
               <h1 className="max-w-3xl text-5xl font-black leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
                 La technologie.
                 <br />
-
                 <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-violet-500 bg-clip-text text-transparent">
                   Sans compromis.
                 </span>
               </h1>
 
-              <p className="mt-6 max-w-xl text-base leading-7 text-zinc-400 sm:text-lg">
+              <p className="mt-6 max-w-xl text-base leading-7 text-zinc-300 sm:text-lg">
                 Découvrez les produits, logiciels et solutions numériques
                 sélectionnés par Kobas Tech pour vous accompagner au quotidien.
               </p>
@@ -210,7 +209,7 @@ export default async function Home() {
                 </Link>
               </div>
 
-              <div className="mt-10 flex flex-wrap gap-6 text-xs text-zinc-500">
+              <div className="mt-10 flex flex-wrap gap-6 text-xs text-zinc-300">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-emerald-400" />
                   Paiement sécurisé
@@ -248,7 +247,7 @@ export default async function Home() {
 
                     <div className="mx-auto mt-4 h-px w-32 bg-gradient-to-r from-transparent via-blue-400 to-transparent" />
 
-                    <p className="mt-5 text-sm text-zinc-500">
+                    <p className="mt-5 text-sm text-zinc-300">
                       Technology. Simplicity. Trust.
                     </p>
                   </div>
@@ -282,7 +281,7 @@ export default async function Home() {
 
               <Link
                 href="/categories"
-                className="hidden items-center gap-1 text-sm font-medium text-zinc-400 transition hover:text-white sm:flex"
+                className="hidden items-center gap-1 text-sm font-medium text-zinc-300 transition hover:text-white sm:flex"
               >
                 Tout voir
                 <ChevronRight className="h-4 w-4" />
@@ -305,11 +304,11 @@ export default async function Home() {
 
                     <h3 className="font-semibold">{category.name}</h3>
 
-                    <p className="mt-2 text-sm leading-6 text-zinc-500">
+                    <p className="mt-2 text-sm leading-6 text-zinc-300">
                       {category.description}
                     </p>
 
-                    <div className="mt-5 flex items-center gap-1 text-xs font-semibold text-zinc-400 transition group-hover:text-blue-400">
+                    <div className="mt-5 flex items-center gap-1 text-xs font-semibold text-zinc-300 transition group-hover:text-blue-400">
                       Découvrir
                       <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
                     </div>
@@ -336,7 +335,7 @@ export default async function Home() {
 
               <Link
                 href="/boutique"
-                className="hidden items-center gap-1 text-sm font-medium text-zinc-400 transition hover:text-white sm:flex"
+                className="hidden items-center gap-1 text-sm font-medium text-zinc-300 transition hover:text-white sm:flex"
               >
                 Voir la boutique
                 <ChevronRight className="h-4 w-4" />
@@ -345,13 +344,13 @@ export default async function Home() {
 
             {products.length === 0 ? (
               <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-12 text-center">
-                <Package className="mx-auto h-10 w-10 text-zinc-600" />
+                <Package className="mx-auto h-10 w-10 text-zinc-400" />
 
                 <h3 className="mt-4 text-lg font-semibold">
                   Aucun produit disponible
                 </h3>
 
-                <p className="mt-2 text-sm text-zinc-500">
+                <p className="mt-2 text-sm text-zinc-300">
                   Les produits disponibles apparaîtront ici.
                 </p>
               </div>
@@ -365,10 +364,12 @@ export default async function Home() {
                     <Link href={"/produit/" + product.slug}>
                       <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-900 to-blue-950/40">
                         {product.images?.[0] ? (
-                          <img
+                          <Image
                             src={product.images[0]}
                             alt={product.name}
-                            className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                            fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            className="object-cover transition duration-500 group-hover:scale-110"
                           />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center">
@@ -400,7 +401,7 @@ export default async function Home() {
                       <div className="mt-5 flex items-end justify-between">
                         <div>
                           {product.comparePrice && (
-                            <p className="text-xs text-zinc-600 line-through">
+                            <p className="text-xs text-zinc-400 line-through">
                               {product.comparePrice.toLocaleString("fr-FR")} FCFA
                             </p>
                           )}
@@ -462,7 +463,7 @@ export default async function Home() {
                   <div>
                     <h3 className="text-sm font-semibold">{item.title}</h3>
 
-                    <p className="mt-1 text-xs leading-5 text-zinc-500">
+                    <p className="mt-1 text-xs leading-5 text-zinc-300">
                       {item.text}
                     </p>
                   </div>
@@ -474,7 +475,7 @@ export default async function Home() {
 
         {/* FOOTER */}
         <footer className="border-t border-white/5">
-          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
+          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-sm text-zinc-300 sm:flex-row sm:items-center sm:justify-between lg:px-8">
             <div>
               <span className="font-semibold text-white">KOBAS TECH</span>
               <span className="mx-2">•</span>
