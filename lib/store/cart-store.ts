@@ -1,3 +1,4 @@
+```tsx
 "use client";
 
 import { create } from "zustand";
@@ -19,7 +20,7 @@ export type CartItem = CartProduct & {
 type CartStore = {
   items: CartItem[];
 
-  addItem: (product: CartProduct) => void;
+  addItem: (product: CartProduct, quantity?: number) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -33,9 +34,16 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
 
-      addItem: (product) => {
+      addItem: (product, quantity = 1) => {
         const items = get().items;
-        const existingItem = items.find((item) => item.id === product.id);
+        const existingItem = items.find(
+          (item) => item.id === product.id
+        );
+
+        const safeQuantity = Math.max(
+          1,
+          Math.min(quantity, product.stock)
+        );
 
         if (existingItem) {
           set({
@@ -44,7 +52,7 @@ export const useCartStore = create<CartStore>()(
                 ? {
                     ...item,
                     quantity: Math.min(
-                      item.quantity + 1,
+                      item.quantity + safeQuantity,
                       product.stock
                     ),
                   }
@@ -60,7 +68,7 @@ export const useCartStore = create<CartStore>()(
             ...items,
             {
               ...product,
-              quantity: 1,
+              quantity: safeQuantity,
             },
           ],
         });
@@ -68,7 +76,9 @@ export const useCartStore = create<CartStore>()(
 
       removeItem: (productId) => {
         set({
-          items: get().items.filter((item) => item.id !== productId),
+          items: get().items.filter(
+            (item) => item.id !== productId
+          ),
         });
       },
 
@@ -98,7 +108,8 @@ export const useCartStore = create<CartStore>()(
 
       getTotal: () => {
         return get().items.reduce(
-          (total, item) => total + item.price * item.quantity,
+          (total, item) =>
+            total + item.price * item.quantity,
           0
         );
       },
@@ -115,3 +126,4 @@ export const useCartStore = create<CartStore>()(
     }
   )
 );
+```
