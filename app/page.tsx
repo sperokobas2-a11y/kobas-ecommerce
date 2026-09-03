@@ -386,30 +386,7 @@ export default async function Home() {
       POPULAIRE
     </span>
   )}
-</div><div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-zinc-900 via-zinc-900 to-blue-950/40">
-  {product.images?.[0] ? (
-    <Image
-      src={product.images[0]}
-      alt={`Image du ${product.name}`}
-      fill
-      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-      className="object-contain p-2 transition duration-500 group-hover:scale-105"
-      priority={product.featured}
-    />
-  ) : (
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-blue-400 backdrop-blur-xl transition duration-500 group-hover:scale-110">
-        <Zap className="h-9 w-9" />
-      </div>
-    </div>
-  )}
 
-  {product.featured && (
-    <span className="absolute left-4 top-4 rounded-full border border-blue-400/20 bg-blue-500/10 px-2.5 py-1 text-[10px] font-bold tracking-wider text-blue-300">
-      POPULAIRE
-    </span>
-  )}
-</div>
                     </Link>
 
                     <div className="p-5">
