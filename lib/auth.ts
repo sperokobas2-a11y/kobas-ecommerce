@@ -145,17 +145,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           type: "password",
         },
       },
-
       async authorize(credentials, request) {
-        const ip = getClientIp(request as Request | undefined);
+  const ip = getClientIp(request as Request | undefined);
 
-        const attemptCheck = await checkAndRecordAttempt(ip, false);
+  const attemptCheck = await checkAndRecordAttempt(ip, false);
 
-        if (attemptCheck.blocked) {
-          throw new Error(
-            `Trop de tentatives échouées. Réessayez dans ${attemptCheck.remainingMinutes} minute(s).`
-          );
-        }
+  if (attemptCheck.blocked) {
+    return null;
+  }
 
         const adminEmail = process.env.ADMIN_EMAIL;
         const adminPassword = process.env.ADMIN_PASSWORD;
