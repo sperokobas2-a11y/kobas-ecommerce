@@ -44,15 +44,11 @@ export async function GET() {
       products,
     });
   } catch (error) {
-    console.error(
-      "GET /api/admin/products:",
-      error
-    );
+    console.error("GET /api/admin/products:", error);
 
     return NextResponse.json(
       {
-        error:
-          "Impossible de charger les produits.",
+        error: "Impossible de charger les produits.",
       },
       { status: 500 }
     );
@@ -85,6 +81,7 @@ export async function POST(request: Request) {
       sku,
       categoryId,
       images,
+      downloadUrl,
       featured,
       active,
     } = body;
@@ -92,8 +89,7 @@ export async function POST(request: Request) {
     if (!name?.trim()) {
       return NextResponse.json(
         {
-          error:
-            "Le nom du produit est obligatoire.",
+          error: "Le nom du produit est obligatoire.",
         },
         { status: 400 }
       );
@@ -102,8 +98,7 @@ export async function POST(request: Request) {
     if (!description?.trim()) {
       return NextResponse.json(
         {
-          error:
-            "La description est obligatoire.",
+          error: "La description est obligatoire.",
         },
         { status: 400 }
       );
@@ -112,17 +107,13 @@ export async function POST(request: Request) {
     if (!categoryId) {
       return NextResponse.json(
         {
-          error:
-            "La catégorie est obligatoire.",
+          error: "La catégorie est obligatoire.",
         },
         { status: 400 }
       );
     }
 
-    if (
-      typeof price !== "number" ||
-      price < 0
-    ) {
+    if (typeof price !== "number" || price < 0) {
       return NextResponse.json(
         {
           error: "Le prix est invalide.",
@@ -131,10 +122,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (
-      typeof stock !== "number" ||
-      stock < 0
-    ) {
+    if (typeof stock !== "number" || stock < 0) {
       return NextResponse.json(
         {
           error: "Le stock est invalide.",
@@ -143,18 +131,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const category =
-      await prisma.category.findUnique({
-        where: {
-          id: categoryId,
-        },
-      });
+    const category = await prisma.category.findUnique({
+      where: {
+        id: categoryId,
+      },
+    });
 
     if (!category) {
       return NextResponse.json(
         {
-          error:
-            "La catégorie sélectionnée n'existe pas.",
+          error: "La catégorie sélectionnée n'existe pas.",
         },
         { status: 400 }
       );
@@ -162,86 +148,75 @@ export async function POST(request: Request) {
 
     let slug = createSlug(name);
 
-    const existingSlug =
-      await prisma.product.findUnique({
-        where: {
-          slug,
-        },
-      });
+    const existingSlug = await prisma.product.findUnique({
+      where: {
+        slug,
+      },
+    });
 
     if (existingSlug) {
       slug = `${slug}-${Date.now()}`;
     }
 
-    const finalSku =
-      sku?.trim() || null;
+    const finalSku = sku?.trim() || null;
 
     if (finalSku) {
-      const existingSku =
-        await prisma.product.findUnique({
-          where: {
-            sku: finalSku,
-          },
-        });
+      const existingSku = await prisma.product.findUnique({
+        where: {
+          sku: finalSku,
+        },
+      });
 
       if (existingSku) {
         return NextResponse.json(
           {
-            error:
-              "Ce SKU est déjà utilisé par un autre produit.",
+            error: "Ce SKU est déjà utilisé par un autre produit.",
           },
           { status: 409 }
         );
       }
     }
 
-    const product =
-      await prisma.product.create({
-        data: {
-          name: name.trim(),
-          slug,
-          description: description.trim(),
+    const product = await prisma.product.create({
+      data: {
+        name: name.trim(),
+        slug,
+        description: description.trim(),
 
-          price,
+        price,
 
-          comparePrice:
-            typeof comparePrice ===
-              "number" &&
-            comparePrice > 0
-              ? comparePrice
-              : null,
+        comparePrice:
+          typeof comparePrice === "number" && comparePrice > 0
+            ? comparePrice
+            : null,
 
-          stock,
+        stock,
 
-          sku: finalSku,
+        sku: finalSku,
 
-          images: Array.isArray(images)
-            ? images.filter(
-                (
-                  image
-                ): image is string =>
-                  typeof image ===
-                    "string" &&
-                  image.trim().length >
-                    0
-              )
-            : [],
+        images: Array.isArray(images)
+          ? images.filter(
+              (image): image is string =>
+                typeof image === "string" && image.trim().length > 0
+            )
+          : [],
 
-          featured: Boolean(
-            featured
-          ),
+        downloadUrl:
+          typeof downloadUrl === "string" && downloadUrl.trim().length > 0
+            ? downloadUrl.trim()
+            : null,
 
-          active: Boolean(
-            active
-          ),
+        featured: Boolean(featured),
 
-          categoryId,
-        },
+        active: Boolean(active),
 
-        include: {
-          category: true,
-        },
-      });
+        categoryId,
+      },
+
+      include: {
+        category: true,
+      },
+    });
 
     return NextResponse.json(
       {
@@ -251,15 +226,11 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    console.error(
-      "POST /api/admin/products:",
-      error
-    );
+    console.error("POST /api/admin/products:", error);
 
     return NextResponse.json(
       {
-        error:
-          "Impossible de créer le produit.",
+        error: "Impossible de créer le produit.",
       },
       { status: 500 }
     );
