@@ -1,3 +1,4 @@
+import Footer from "@/components/Footer";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -454,30 +455,7 @@ export default async function ProductPage({
         </div>
 
         {/* FOOTER */}
-        <footer className="mt-20 border-t border-border/50">
-          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-muted-foreground sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-            <p>
-              © {new Date().getFullYear()} Kobas Tech. Tous
-              droits réservés.
-            </p>
-
-            <div className="flex gap-5">
-              <Link
-                href="/a-propos"
-                className="transition-colors hover:text-foreground"
-              >
-                À propos
-              </Link>
-
-              <Link
-                href="/contact"
-                className="transition-colors hover:text-foreground"
-              >
-                Contact
-              </Link>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </main>
     </>
   );
