@@ -1,3 +1,4 @@
+import Footer from "@/components/Footer";
 import Link from "next/link";
 import { Package, Search, ShoppingCart, Zap } from "lucide-react";
 
@@ -185,17 +186,7 @@ export default async function RecherchePage({
         )}
       </section>
 
-      <footer className="border-t border-white/5">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-8 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <div>
-            <span className="font-semibold text-white">KOBAS TECH</span>
-            <span className="mx-2">•</span>
-            Technologie. Simplicité. Confiance.
-          </div>
-
-          <p>© {new Date().getFullYear()} Kobas Tech.</p>
-        </div>
-      </footer>
+     <Footer />
     </main>
   );
 }
