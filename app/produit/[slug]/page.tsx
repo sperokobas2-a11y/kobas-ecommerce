@@ -182,7 +182,7 @@ export default async function ProductPage({
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
             <Link
               href="/"
-              className="text-xl font-bold tracking-tight"
+              className="text-xl font-bold tracking-tight text-white"
             >
               Kobas <span className="text-primary">Tech</span>
             </Link>
@@ -190,35 +190,35 @@ export default async function ProductPage({
             <nav className="hidden items-center gap-6 md:flex">
               <Link
                 href="/"
-                className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
+                className="text-sm font-medium text-zinc-300 transition-colors hover:text-white"
               >
                 Accueil
               </Link>
 
               <Link
                 href="/boutique"
-                className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
+                className="text-sm font-medium text-zinc-300 transition-colors hover:text-white"
               >
                 Boutique
               </Link>
 
               <Link
                 href="/categories"
-                className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
+                className="text-sm font-medium text-zinc-300 transition-colors hover:text-white"
               >
                 Catégories
               </Link>
 
               <Link
                 href="/a-propos"
-                className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
+                className="text-sm font-medium text-zinc-300 transition-colors hover:text-white"
               >
                 À propos
               </Link>
 
               <Link
                 href="/contact"
-                className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
+                className="text-sm font-medium text-zinc-300 transition-colors hover:text-white"
               >
                 Contact
               </Link>
@@ -226,7 +226,7 @@ export default async function ProductPage({
 
             <Link
               href="/boutique"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 transition-colors hover:bg-zinc-800"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-zinc-200 transition-colors hover:bg-zinc-800 hover:text-white"
               aria-label="Voir la boutique"
             >
               <ShoppingCart className="h-5 w-5" />
@@ -237,7 +237,7 @@ export default async function ProductPage({
         {/* CONTENU */}
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {/* BREADCRUMB */}
-          <div className="mb-8 flex items-center gap-2 text-sm text-zinc-400">
+          <div className="mb-8 flex items-center gap-2 text-sm text-zinc-300">
             <Link
               href="/boutique"
               className="transition-colors hover:text-white"
@@ -245,7 +245,7 @@ export default async function ProductPage({
               Boutique
             </Link>
 
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4 text-zinc-500" />
 
             <Link
               href={"/boutique?categorie=" + product.category.slug}
@@ -254,7 +254,7 @@ export default async function ProductPage({
               {product.category.name}
             </Link>
 
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4 text-zinc-500" />
 
             <span className="truncate text-white">
               {product.name}
@@ -264,7 +264,7 @@ export default async function ProductPage({
           {/* RETOUR */}
           <Link
             href="/boutique"
-            className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-zinc-400 transition-colors hover:text-white"
+            className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-zinc-300 transition-colors hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
             Retour à la boutique
@@ -285,7 +285,7 @@ export default async function ProductPage({
                 />
               ) : (
                 <div className="flex h-full items-center justify-center">
-                  <Package className="h-24 w-24 text-zinc-500" />
+                  <Package className="h-24 w-24 text-zinc-400" />
                 </div>
               )}
             </div>
@@ -301,19 +301,19 @@ export default async function ProductPage({
               </Link>
 
               {/* NOM */}
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
                 {product.name}
               </h1>
 
               {/* PRIX */}
               <div className="mt-6 flex items-center gap-3">
-                <span className="text-3xl font-bold">
+                <span className="text-3xl font-bold text-white">
                   {product.price.toLocaleString("fr-FR")} FCFA
                 </span>
 
                 {product.comparePrice &&
                   product.comparePrice > product.price && (
-                    <span className="text-lg text-zinc-400 line-through">
+                    <span className="text-lg text-zinc-300 line-through">
                       {product.comparePrice.toLocaleString("fr-FR")} FCFA
                     </span>
                   )}
@@ -321,11 +321,11 @@ export default async function ProductPage({
 
               {/* DESCRIPTION */}
               <div className="mt-8">
-                <h2 className="mb-3 text-lg font-semibold">
+                <h2 className="mb-3 text-lg font-semibold text-white">
                   Description
                 </h2>
 
-                <p className="whitespace-pre-line leading-7 text-zinc-400">
+                <p className="whitespace-pre-line leading-7 text-zinc-300">
                   {product.description}
                 </p>
               </div>
@@ -334,14 +334,14 @@ export default async function ProductPage({
               <div className="mt-8 flex items-center gap-2">
                 {product.stock > 0 ? (
                   <>
-                    <Check className="h-5 w-5 text-green-500" />
+                    <Check className="h-5 w-5 text-green-400" />
 
-                    <span className="text-sm font-medium text-green-500">
+                    <span className="text-sm font-medium text-green-400">
                       En stock
                     </span>
 
                     {product.stock <= 5 && (
-                      <span className="text-sm text-zinc-400">
+                      <span className="text-sm text-zinc-300">
                         — Plus que {product.stock} disponible
                         {product.stock > 1 ? "s" : ""}
                       </span>
@@ -351,7 +351,7 @@ export default async function ProductPage({
                   <>
                     <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
 
-                    <span className="text-sm font-medium text-red-500">
+                    <span className="text-sm font-medium text-red-400">
                       Rupture de stock
                     </span>
                   </>
@@ -360,26 +360,26 @@ export default async function ProductPage({
 
               {/* QUANTITÉ */}
               <div className="mt-8">
-                <p className="mb-3 text-sm font-medium">
+                <p className="mb-3 text-sm font-medium text-white">
                   Quantité
                 </p>
 
-                <div className="flex h-12 w-fit items-center rounded-xl border border-white/10">
+                <div className="flex h-12 w-fit items-center rounded-xl border border-white/10 bg-zinc-900">
                   <button
                     type="button"
-                    className="flex h-full w-12 items-center justify-center transition-colors hover:bg-zinc-800"
+                    className="flex h-full w-12 items-center justify-center text-zinc-200 transition-colors hover:bg-zinc-800 hover:text-white"
                     aria-label="Diminuer la quantité"
                   >
                     <Minus className="h-4 w-4" />
                   </button>
 
-                  <span className="flex w-12 justify-center font-medium">
+                  <span className="flex w-12 justify-center font-medium text-white">
                     1
                   </span>
 
                   <button
                     type="button"
-                    className="flex h-full w-12 items-center justify-center transition-colors hover:bg-zinc-800"
+                    className="flex h-full w-12 items-center justify-center text-zinc-200 transition-colors hover:bg-zinc-800 hover:text-white"
                     aria-label="Augmenter la quantité"
                   >
                     <Plus className="h-4 w-4" />
@@ -402,16 +402,16 @@ export default async function ProductPage({
               </div>
 
               {/* GARANTIES */}
-              <div className="mt-8 grid gap-4 rounded-2xl border border-white/10 bg-zinc-900/50 p-5 sm:grid-cols-3">
+              <div className="mt-8 grid gap-4 rounded-2xl border border-white/10 bg-zinc-900/70 p-5 sm:grid-cols-3">
                 <div className="flex items-start gap-3">
                   <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
 
                   <div>
-                    <p className="text-sm font-semibold">
+                    <p className="text-sm font-semibold text-white">
                       Paiement sécurisé
                     </p>
 
-                    <p className="mt-1 text-xs text-zinc-400">
+                    <p className="mt-1 text-xs text-zinc-300">
                       Transactions protégées
                     </p>
                   </div>
@@ -421,11 +421,11 @@ export default async function ProductPage({
                   <Zap className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
 
                   <div>
-                    <p className="text-sm font-semibold">
+                    <p className="text-sm font-semibold text-white">
                       Livraison rapide
                     </p>
 
-                    <p className="mt-1 text-xs text-zinc-400">
+                    <p className="mt-1 text-xs text-zinc-300">
                       Accès rapide à votre achat
                     </p>
                   </div>
@@ -435,11 +435,11 @@ export default async function ProductPage({
                   <Package className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
 
                   <div>
-                    <p className="text-sm font-semibold">
+                    <p className="text-sm font-semibold text-white">
                       Support Kobas Tech
                     </p>
 
-                    <p className="mt-1 text-xs text-zinc-400">
+                    <p className="mt-1 text-xs text-zinc-300">
                       Assistance disponible
                     </p>
                   </div>
@@ -448,7 +448,7 @@ export default async function ProductPage({
 
               {/* RÉFÉRENCE */}
               {product.sku && (
-                <p className="mt-6 text-xs text-zinc-400">
+                <p className="mt-6 text-xs text-zinc-300">
                   Référence : {product.sku}
                 </p>
               )}
