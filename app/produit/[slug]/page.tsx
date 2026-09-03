@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -15,6 +16,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import AddToCartButton from "@/components/add-to-cart-button";
 import BuyNowButton from "@/components/buy-now-button";
+
 export const dynamic = "force-dynamic";
 
 type ProductPageProps = {
@@ -22,6 +24,84 @@ type ProductPageProps = {
     slug: string;
   }>;
 };
+
+export async function generateMetadata({
+  params,
+}: ProductPageProps): Promise<Metadata> {
+  const { slug } = await params;
+
+  const product = await prisma.product.findUnique({
+    where: {
+      slug,
+    },
+    select: {
+      name: true,
+      description: true,
+      images: true,
+      active: true,
+      category: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  if (!product || !product.active) {
+    return {
+      title: "Produit introuvable | Kobas Tech",
+      description: "Ce produit n'est plus disponible sur Kobas Tech.",
+    };
+  }
+
+  const baseUrl = "https://kobas-ecommerce.vercel.app";
+  const productUrl = baseUrl + "/produit/" + slug;
+
+  const description =
+    product.description.length > 160
+      ? product.description.slice(0, 157) + "..."
+      : product.description;
+
+  return {
+    title: product.name + " | Kobas Tech",
+    description,
+    keywords: [
+      product.name,
+      "Kobas Tech",
+      product.category.name,
+      "technologie",
+      "produit numérique",
+      "Bénin",
+    ],
+    alternates: {
+      canonical: productUrl,
+    },
+    openGraph: {
+      title: product.name + " | Kobas Tech",
+      description,
+      url: productUrl,
+      siteName: "Kobas Tech",
+      locale: "fr_BJ",
+      type: "website",
+      images: product.images?.[0]
+        ? [
+            {
+              url: product.images[0],
+              width: 1200,
+              height: 1200,
+              alt: product.name,
+            },
+          ]
+        : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name + " | Kobas Tech",
+      description,
+      images: product.images?.[0] ? [product.images[0]] : [],
+    },
+  };
+}
 
 export default async function ProductPage({
   params,
@@ -52,9 +132,7 @@ export default async function ProductPage({
             </div>
 
             <div>
-              <p className="text-lg font-bold tracking-tight">
-                KOBAS
-              </p>
+              <p className="text-lg font-bold tracking-tight">KOBAS</p>
 
               <p className="-mt-1 text-[9px] font-semibold tracking-[0.28em] text-blue-400">
                 TECH
@@ -109,10 +187,7 @@ export default async function ProductPage({
       {/* BREADCRUMB */}
       <div className="border-b border-white/5">
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-5 py-5 text-xs text-zinc-500 lg:px-8">
-          <Link
-            href="/"
-            className="transition hover:text-white"
-          >
+          <Link href="/" className="transition hover:text-white">
             Accueil
           </Link>
 
@@ -146,28 +221,28 @@ export default async function ProductPage({
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-20">
           {/* IMAGE / VISUEL */}
           <div className="relative aspect-square overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-zinc-900 via-zinc-900 to-blue-950/40">
-  {product.images?.[0] ? (
-    <img
-      src={product.images[0]}
-      alt={product.name}
-      className="h-full w-full object-cover"
-    />
-  ) : (
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div className="relative flex h-40 w-40 items-center justify-center rounded-[40px] border border-white/10 bg-white/5 shadow-2xl backdrop-blur-xl">
-        <div className="absolute inset-0 rounded-[40px] bg-blue-500/10 blur-2xl" />
+            {product.images?.[0] ? (
+              <img
+                src={product.images[0]}
+                alt={product.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="relative flex h-40 w-40 items-center justify-center rounded-[40px] border border-white/10 bg-white/5 shadow-2xl backdrop-blur-xl">
+                  <div className="absolute inset-0 rounded-[40px] bg-blue-500/10 blur-2xl" />
 
-        <Zap className="relative h-16 w-16 text-blue-400" />
-      </div>
-    </div>
-  )}
+                  <Zap className="relative h-16 w-16 text-blue-400" />
+                </div>
+              </div>
+            )}
 
-  {product.featured && (
-    <span className="absolute left-6 top-6 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-bold tracking-wider text-blue-300">
-      PRODUIT POPULAIRE
-    </span>
-  )}
-</div>
+            {product.featured && (
+              <span className="absolute left-6 top-6 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1.5 text-[10px] font-bold tracking-wider text-blue-300">
+                PRODUIT POPULAIRE
+              </span>
+            )}
+          </div>
 
           {/* INFORMATIONS */}
           <div className="flex flex-col justify-center">
@@ -202,11 +277,12 @@ export default async function ProductPage({
             {/* STOCK */}
             <div className="mt-8 flex items-center gap-3">
               <div
-                className={`flex h-9 w-9 items-center justify-center rounded-full ${
-                  product.stock > 0
+                className={
+                  "flex h-9 w-9 items-center justify-center rounded-full " +
+                  (product.stock > 0
                     ? "bg-emerald-500/10 text-emerald-400"
-                    : "bg-red-500/10 text-red-400"
-                }`}
+                    : "bg-red-500/10 text-red-400")
+                }
               >
                 {product.stock > 0 ? (
                   <Check className="h-4 w-4" />
@@ -271,7 +347,7 @@ export default async function ProductPage({
                 }}
               />
 
-                           <BuyNowButton
+              <BuyNowButton
                 product={{
                   id: product.id,
                   name: product.name,
@@ -334,9 +410,7 @@ export default async function ProductPage({
             Technologie. Simplicité. Confiance.
           </div>
 
-          <p>
-            © {new Date().getFullYear()} Kobas Tech.
-          </p>
+          <p>© {new Date().getFullYear()} Kobas Tech.</p>
         </div>
       </footer>
     </main>
