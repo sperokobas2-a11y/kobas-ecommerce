@@ -14,16 +14,20 @@ type BuyNowButtonProps = {
     price: number;
     stock: number;
   };
+  quantity: number;
 };
 
-export default function BuyNowButton({ product }: BuyNowButtonProps) {
+export default function BuyNowButton({
+  product,
+  quantity,
+}: BuyNowButtonProps) {
   const router = useRouter();
   const addItem = useCartStore((state) => state.addItem);
   const [loading, setLoading] = useState(false);
 
   function handleBuyNow() {
     setLoading(true);
-    addItem(product);
+    addItem(product, quantity);
     router.push("/commande");
   }
 
