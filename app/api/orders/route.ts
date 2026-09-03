@@ -222,15 +222,16 @@ export async function POST(request: Request) {
 
         paymentMethod: (paymentMethod as PaymentMethod) || "MTN_MONEY",
 
-        items: {
-          create: products.map(({ product, quantity }) => ({
-            productId: product.id,
-            name: product.name,
-            price: product.price,
-            quantity,
-            total: product.price * quantity,
-          })),
-        },
+       items: {
+  create: products.map(({ product, quantity }) => ({
+    productId: product.id,
+    name: product.name,
+    price: product.price,
+    quantity,
+    total: product.price * quantity,
+    downloadUrl: product.downloadUrl || null,
+  })),
+},
       },
 
       include: {
