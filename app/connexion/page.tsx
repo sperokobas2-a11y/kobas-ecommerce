@@ -10,11 +10,15 @@ import Header from "@/components/Header";
 export default function ConnexionPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
   const [error, setError] = useState("");
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
     setLoading(true);
@@ -47,6 +51,7 @@ export default function ConnexionPage() {
       setError(
         "Impossible de se connecter avec Google. Veuillez réessayer."
       );
+
       setGoogleLoading(false);
     }
   }
@@ -72,7 +77,6 @@ export default function ConnexionPage() {
 
         <div className="mt-8 rounded-3xl border border-white/10 bg-white/[0.025] p-7 shadow-2xl">
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* EMAIL */}
             <div>
               <label className="mb-2 block text-xs font-semibold text-zinc-400">
                 Adresse email
@@ -93,10 +97,9 @@ export default function ConnexionPage() {
               </div>
             </div>
 
-            {/* MOT DE PASSE */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="block text-xs font-semibold text-zinc-400">
+                <label className="text-xs font-semibold text-zinc-400">
                   Mot de passe
                 </label>
 
@@ -123,7 +126,6 @@ export default function ConnexionPage() {
               </div>
             </div>
 
-            {/* ERREUR */}
             {error && (
               <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
                 <p className="text-xs font-medium text-red-400">
@@ -132,7 +134,6 @@ export default function ConnexionPage() {
               </div>
             )}
 
-            {/* CONNEXION CLASSIQUE */}
             <button
               type="submit"
               disabled={loading || googleLoading}
@@ -149,7 +150,6 @@ export default function ConnexionPage() {
             </button>
           </form>
 
-          {/* SÉPARATEUR */}
           <div className="my-6 flex items-center gap-4">
             <div className="h-px flex-1 bg-white/10" />
 
@@ -160,7 +160,6 @@ export default function ConnexionPage() {
             <div className="h-px flex-1 bg-white/10" />
           </div>
 
-          {/* GOOGLE */}
           <button
             type="button"
             onClick={handleGoogleLogin}
@@ -179,14 +178,17 @@ export default function ConnexionPage() {
                   fill="#4285F4"
                   d="M21.35 12.23c0-.79-.07-1.55-.2-2.28H12v4.31h5.23a4.47 4.47 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.92-4.18 2.92-7.42Z"
                 />
+
                 <path
                   fill="#34A853"
                   d="M12 21.5c2.63 0 4.84-.87 6.45-2.35l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.54 0-4.69-1.72-5.46-4.03H3.3v2.53A9.74 9.74 0 0 0 12 21.5Z"
                 />
+
                 <path
                   fill="#FBBC05"
                   d="M6.54 13.59A5.86 5.86 0 0 1 6.23 12c0-.55.1-1.09.31-1.59V7.88H3.3A9.74 9.74 0 0 0 2.25 12c0 1.57.38 3.05 1.05 4.12l3.24-2.53Z"
                 />
+
                 <path
                   fill="#EA4335"
                   d="M12 6.38c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.84 3.47 14.63 2.5 12 2.5a9.74 9.74 0 0 0-8.7 5.38l3.24 2.53C7.31 8.1 9.46 6.38 12 6.38Z"
@@ -199,7 +201,6 @@ export default function ConnexionPage() {
               : "Continuer avec Google"}
           </button>
 
-          {/* INSCRIPTION */}
           <p className="mt-6 text-center text-sm text-zinc-500">
             Pas encore de compte ?{" "}
             <Link
