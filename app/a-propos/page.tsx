@@ -19,7 +19,7 @@ import Header from "@/components/Header";
 
 export const dynamic = "force-dynamic";
 
-const baseUrl = "https://kobas-ecommerce.vercel.app";
+const baseUrl = "https://www.kobas-ecommerce.shop";
 
 export const metadata: Metadata = {
   title: "À propos de Kobas Tech | Solutions technologiques au Bénin",
