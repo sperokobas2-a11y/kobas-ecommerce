@@ -112,7 +112,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (statusChanged && resend) {
       try {
         await resend.emails.send({
-          from: "Kobas Tech <onboarding@resend.dev>",
+          from: "Kobas Tech <contact@kobas-ecommerce.shop>",
           to: updatedOrder.customer.email,
           subject: `Commande ${updatedOrder.orderNumber} — ${
             STATUS_LABELS[status]
