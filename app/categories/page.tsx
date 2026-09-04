@@ -15,7 +15,7 @@ import Header from "@/components/Header";
 
 export const dynamic = "force-dynamic";
 
-const baseUrl = "https://kobas-ecommerce.vercel.app";
+const baseUrl = "https://www.kobas-ecommerce.shop";
 
 // SEO
 export const metadata: Metadata = {
