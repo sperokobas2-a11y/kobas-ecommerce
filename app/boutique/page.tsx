@@ -19,7 +19,7 @@ type BoutiquePageProps = {
   searchParams: Promise<{ categorie?: string }>;
 };
 
-const baseUrl = "https://kobas-ecommerce.vercel.app";
+const baseUrl = "https://www.kobas-ecommerce.shop";
 
 export async function generateMetadata({
   searchParams,
