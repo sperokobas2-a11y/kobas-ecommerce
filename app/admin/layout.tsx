@@ -7,6 +7,7 @@ import {
   ClipboardList,
   LayoutDashboard,
   LogOut,
+  Mail,
   Package,
   Users,
   BarChart3,
@@ -21,6 +22,7 @@ const NAV_LINKS = [
   { href: "/admin/clients", label: "Clients", icon: Users },
   { href: "/admin/statistiques", label: "Statistiques", icon: BarChart3 },
   { href: "/admin/messages", label: "Messages", icon: MessageSquare },
+  { href: "/admin/newsletter", label: "Newsletter", icon: Mail },
 ];
 
 export default function AdminLayout({
