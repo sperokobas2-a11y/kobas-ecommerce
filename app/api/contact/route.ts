@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     if (resend) {
       try {
         await resend.emails.send({
-          from: "Kobas Tech <onboarding@resend.dev>",
+          from: "Kobas Tech <contact@kobas-ecommerce.shop>",
           to: "sperokobas2@gmail.com",
           replyTo: email,
           subject: subject
