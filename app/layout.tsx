@@ -37,8 +37,8 @@ export const metadata: Metadata = {
   ],
   creator: "Kobas Tech",
   verification: {
-    google: "A3Du6NESia-amFVttH14hBsIyEnhvgWc32MtOkK6yVU",
-  },
+  google: "jXN9xJTpTPAaaSS6eRgmneKk0ZNFy0CZvYO8BBGSu2s",
+},
   robots: {
     index: true,
     follow: true,
