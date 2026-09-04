@@ -23,22 +23,26 @@ export default function AdminLoginPage() {
       password,
       redirect: false,
     });
+     if (result?.error) {
+  try {
+    const statusResponse = await fetch("/api/login-status");
+    const statusData = await statusResponse.json();
 
-    if (result?.error) {
-  const statusResponse = await fetch("/api/admin/login-status");
-  const statusData = await statusResponse.json();
-
-  if (statusData.blocked) {
-    setError(
-      `Trop de tentatives échouées. Réessayez dans ${statusData.remainingMinutes} minute(s).`
-    );
-  } else {
+    if (statusData.blocked) {
+      setError(
+        `Trop de tentatives échouées. Réessayez dans ${statusData.remainingMinutes} minute(s).`
+      );
+    } else {
+      setError("Email ou mot de passe incorrect.");
+    }
+  } catch {
     setError("Email ou mot de passe incorrect.");
   }
 
   setLoading(false);
   return;
 }
+    
 
     window.location.href = "/admin";
   }
