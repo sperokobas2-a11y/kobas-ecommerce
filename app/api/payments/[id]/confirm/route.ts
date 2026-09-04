@@ -89,7 +89,7 @@ export async function PATCH(request: Request, context: RouteContext) {
             .join("");
 
           await resend.emails.send({
-            from: "Kobas Tech <onboarding@resend.dev>",
+            from: "Kobas Tech <contact@kobas-ecommerce.shop>",
             to: fullOrder.customer.email,
             subject: `Vos fichiers pour la commande ${fullOrder.orderNumber}`,
             html: `
