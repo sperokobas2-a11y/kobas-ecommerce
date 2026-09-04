@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 export const metadata: Metadata = {
-  metadataBase: new URL("https://kobas-ecommerce.vercel.app"),
+  metadataBase: new URL("https://www.kobas-ecommerce.shop"),
   title: {
     default: "Kobas Tech | Solutions digitales et technologiques",
     template: "%s | Kobas Tech",
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "fr_FR",
-    url: "https://kobas-ecommerce.vercel.app",
+    url: "https://www.kobas-ecommerce.shop",
     siteName: "Kobas Tech",
     title: "Kobas Tech | Solutions digitales et technologiques",
     description:
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
       "Découvrez les produits et services technologiques de Kobas Tech au Bénin.",
   },
   alternates: {
-    canonical: "https://kobas-ecommerce.vercel.app",
+    canonical: "https://www.kobas-ecommerce.shop",
   },
 };
 export default function RootLayout({
