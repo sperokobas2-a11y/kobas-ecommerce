@@ -21,7 +21,7 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-const baseUrl = "https://kobas-ecommerce.vercel.app";
+const baseUrl = "https://www.kobas-ecommerce.shop";
 
 export const metadata: Metadata = {
   title: "Kobas Tech | Technologie, produits numériques et solutions tech",
