@@ -1,4 +1,5 @@
 import Footer from "@/components/Footer";
+import Newsletter from "@/components/Newsletter";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Header from "@/components/Header";
@@ -429,6 +430,9 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* NEWSLETTER */}
+        <Newsletter />
+
         {/* TRUST */}
         <section className="border-t border-white/5 bg-white/[0.015]">
           <div className="mx-auto grid max-w-7xl gap-8 px-5 py-16 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
@@ -476,7 +480,7 @@ export default async function Home() {
         </section>
 
         {/* FOOTER */}
-        <Footer />
+        <Footer showNewsletter={false} />
       </main>
     </>
   );
