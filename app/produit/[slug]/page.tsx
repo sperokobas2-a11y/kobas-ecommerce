@@ -51,7 +51,7 @@ export async function generateMetadata({
     };
   }
 
-  const baseUrl = "https://kobas-ecommerce.vercel.app";
+  const baseUrl = "https://www.kobas-ecommerce.shop";
   const productUrl = baseUrl + "/produit/" + slug;
 
   const description =
@@ -125,7 +125,7 @@ export default async function ProductPage({
   }
 
   const productUrl =
-    "https://kobas-ecommerce.vercel.app/produit/" + product.slug;
+  "https://www.kobas-ecommerce.shop/produit/" + product.slug;
 
   const productJsonLd = {
     "@context": "https://schema.org",
