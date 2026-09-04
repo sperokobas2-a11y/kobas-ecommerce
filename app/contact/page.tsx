@@ -65,17 +65,19 @@ export default function ContactPage() {
     }
   }
 
+  const baseUrl = "https://www.kobas-ecommerce.shop";
+
   const contactPageJsonLd = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
     name: "Contact Kobas Tech",
-    url: "https://kobas-ecommerce.vercel.app/contact",
+    url: baseUrl + "/contact",
     description:
       "Contactez Kobas Tech au Bénin pour toute question, demande d'assistance, projet digital ou besoin en solutions technologiques.",
     mainEntity: {
       "@type": "Organization",
       name: "Kobas Tech",
-      url: "https://kobas-ecommerce.vercel.app",
+      url: baseUrl,
       email: "sperokobas2@gmail.com",
       telephone: "+2290192604908",
       areaServed: {
