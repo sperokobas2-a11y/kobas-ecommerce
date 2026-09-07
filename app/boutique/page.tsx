@@ -160,12 +160,38 @@ export default async function BoutiquePage({
     })),
   };
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Accueil",
+        item: baseUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: activeCategory ? activeCategory.name : "Boutique",
+        item: boutiqueUrl,
+      },
+    ],
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(itemListJsonLd),
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd),
         }}
       />
 
@@ -185,7 +211,7 @@ export default async function BoutiquePage({
 
             <p className="mt-4 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
               {activeCategory?.description ||
-                "Découvrez notre sélection de produits numériques et technologiques."}
+                "Découvrez notre sélection de produits numériques et technologiques, disponible partout au Bénin : Cotonou, Porto-Novo, Parakou et au-delà."}
             </p>
           </div>
         </section>
