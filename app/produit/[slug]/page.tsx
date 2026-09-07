@@ -48,37 +48,92 @@ export async function generateMetadata({
     return {
       title: "Produit introuvable | Kobas Tech",
       description: "Ce produit n'est plus disponible sur Kobas Tech.",
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
   const baseUrl = "https://www.kobas-ecommerce.shop";
   const productUrl = baseUrl + "/produit/" + slug;
 
+  const categoryName = product.category.name;
+
+  const categoryKeywords: Record<string, string[]> = {
+    Gaming: [
+      "jeux PC",
+      "gaming",
+      "jeux vidéo",
+      "pack gaming",
+      "jeux vidéo Bénin",
+      "gaming Bénin",
+      "gaming Cotonou",
+    ],
+
+    Logiciels: [
+      "logiciels PC",
+      "logiciels professionnels",
+      "logiciels Windows",
+      "logiciels Bénin",
+      "logiciels Cotonou",
+      "productivité",
+    ],
+
+    Informatique: [
+      "informatique",
+      "logiciels informatiques",
+      "Windows 11",
+      "Office",
+      "informatique Bénin",
+      "informatique Cotonou",
+    ],
+
+    Téléphones: [
+      "téléphones",
+      "smartphones",
+      "téléphonie",
+      "smartphones Bénin",
+      "téléphones Bénin",
+      "téléphones Cotonou",
+    ],
+  };
+
+  const keywords = [
+    product.name,
+    "Kobas Tech",
+    categoryName,
+    "Bénin",
+    "Cotonou",
+    "produit numérique",
+    ...(categoryKeywords[categoryName] || [
+      "technologie",
+      "solutions technologiques",
+      "produits numériques Bénin",
+    ]),
+  ];
+
   const description =
-    product.description.length > 160
-      ? product.description.slice(0, 157) + "..."
+    product.description.length > 155
+      ? product.description.slice(0, 152) + "..."
       : product.description;
 
+  const title =
+    product.name + " | " + categoryName + " au Bénin | Kobas Tech";
+
   return {
-    title: product.name + " | Kobas Tech",
+    title,
 
     description,
 
-    keywords: [
-      product.name,
-      "Kobas Tech",
-      product.category.name,
-      "technologie",
-      "produit numérique",
-      "Bénin",
-    ],
+    keywords,
 
     alternates: {
       canonical: productUrl,
     },
 
     openGraph: {
-      title: product.name + " | Kobas Tech",
+      title,
       description,
       url: productUrl,
       siteName: "Kobas Tech",
@@ -99,7 +154,7 @@ export async function generateMetadata({
 
     twitter: {
       card: "summary_large_image",
-      title: product.name + " | Kobas Tech",
+      title,
       description,
       images: product.images?.[0] ? [product.images[0]] : [],
     },
@@ -125,7 +180,7 @@ export default async function ProductPage({
   }
 
   const productUrl =
-  "https://www.kobas-ecommerce.shop/produit/" + product.slug;
+    "https://www.kobas-ecommerce.shop/produit/" + product.slug;
 
   const productJsonLd = {
     "@context": "https://schema.org",
@@ -274,7 +329,12 @@ export default async function ProductPage({
               {product.images?.[0] ? (
                 <Image
                   src={product.images[0]}
-                  alt={product.name}
+                  alt={
+                    product.name +
+                    " - " +
+                    product.category.name +
+                    " | Kobas Tech"
+                  }
                   fill
                   priority
                   sizes="(max-width: 1024px) 100vw, 50vw"
