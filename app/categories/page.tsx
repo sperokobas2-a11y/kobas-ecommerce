@@ -87,12 +87,38 @@ export default async function CategoriesPage() {
     })),
   };
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Accueil",
+        item: baseUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Catégories",
+        item: baseUrl + "/categories",
+      },
+    ],
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(categoryListJsonLd),
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd),
         }}
       />
 
@@ -111,7 +137,8 @@ export default async function CategoriesPage() {
 
             <p className="max-w-xl text-sm leading-6 text-zinc-500">
               Parcourez notre catalogue organisé par catégorie pour trouver
-              exactement ce dont vous avez besoin.
+              exactement ce dont vous avez besoin, où que vous soyez au
+              Bénin.
             </p>
           </div>
 
