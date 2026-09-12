@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 
@@ -14,21 +15,27 @@ type RouteContext = {
 
 const ALLOWED_STATUSES = ["PAID", "FAILED"] as const;
 
-type AllowedPaymentStatus = (typeof ALLOWED_STATUSES)[number];
+const confirmPaymentSchema = z.object({
+  status: z.enum(ALLOWED_STATUSES, {
+    errorMap: () => ({ message: "Le statut doit être PAID ou FAILED." }),
+  }),
+});
 
 export async function PATCH(request: Request, context: RouteContext) {
   try {
     const { id } = await context.params;
-    const body = await request.json();
+    const rawBody = await request.json();
 
-    const status = body.status as AllowedPaymentStatus | undefined;
+    const parsed = confirmPaymentSchema.safeParse(rawBody);
 
-    if (!status || !ALLOWED_STATUSES.includes(status)) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Le statut doit être PAID ou FAILED." },
+        { error: parsed.error.issues[0]?.message || "Données invalides." },
         { status: 400 }
       );
     }
+
+    const { status } = parsed.data;
 
     const payment = await prisma.payment.findUnique({
       where: { id },
@@ -110,8 +117,6 @@ export async function PATCH(request: Request, context: RouteContext) {
           });
         }
       } catch (emailError) {
-        // On ne bloque pas la réponse si l'e-mail échoue :
-        // le paiement reste confirmé, on pourra renvoyer le lien manuellement.
         console.error(
           "Erreur envoi e-mail de téléchargement:",
           emailError
