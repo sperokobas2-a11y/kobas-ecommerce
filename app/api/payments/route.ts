@@ -1,5 +1,21 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+
+const PAYMENT_METHODS = ["MTN_MONEY", "MOOV_MONEY", "CARD", "CASH"] as const;
+
+const createPaymentSchema = z.object({
+  orderId: z.string().trim().min(1, "L'identifiant de la commande est obligatoire."),
+  method: z.enum(PAYMENT_METHODS, {
+    errorMap: () => ({ message: "Le moyen de paiement est invalide." }),
+  }),
+  phone: z
+    .string()
+    .trim()
+    .min(6, "Le numéro de téléphone n'est pas valide.")
+    .max(20, "Le numéro de téléphone n'est pas valide.")
+    .optional(),
+});
 
 function generateTransactionId() {
   const timestamp = Date.now().toString(36).toUpperCase();
@@ -10,25 +26,18 @@ function generateTransactionId() {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const rawBody = await request.json();
 
-    const { orderId, method, phone } = body;
+    const parsed = createPaymentSchema.safeParse(rawBody);
 
-    if (!orderId) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "L'identifiant de la commande est obligatoire." },
+        { error: parsed.error.issues[0]?.message || "Données invalides." },
         { status: 400 }
       );
     }
 
-    const allowedMethods = ["MTN_MONEY", "MOOV_MONEY", "CARD", "CASH"];
-
-    if (!allowedMethods.includes(method)) {
-      return NextResponse.json(
-        { error: "Le moyen de paiement est invalide." },
-        { status: 400 }
-      );
-    }
+    const { orderId, method, phone } = parsed.data;
 
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -59,8 +68,7 @@ export async function POST(request: Request) {
     if (existingPending) {
       return NextResponse.json(
         {
-          error:
-            "Un paiement est déjà en attente pour cette commande.",
+          error: "Un paiement est déjà en attente pour cette commande.",
           payment: {
             id: existingPending.id,
             transactionId: existingPending.transactionId,
@@ -73,16 +81,14 @@ export async function POST(request: Request) {
       );
     }
 
-    if (method !== "CARD" && method !== "CASH") {
-      if (!phone || typeof phone !== "string") {
-        return NextResponse.json(
-          {
-            error:
-              "Le numéro de téléphone est obligatoire pour ce moyen de paiement.",
-          },
-          { status: 400 }
-        );
-      }
+    if (method !== "CARD" && method !== "CASH" && !phone) {
+      return NextResponse.json(
+        {
+          error:
+            "Le numéro de téléphone est obligatoire pour ce moyen de paiement.",
+        },
+        { status: 400 }
+      );
     }
 
     const transactionId = generateTransactionId();
@@ -95,10 +101,7 @@ export async function POST(request: Request) {
         currency: "XOF",
         method,
         status: "PENDING",
-        phone:
-          typeof phone === "string" && phone.trim()
-            ? phone.trim()
-            : null,
+        phone: phone || null,
         provider:
           method === "MTN_MONEY"
             ? "MTN"
